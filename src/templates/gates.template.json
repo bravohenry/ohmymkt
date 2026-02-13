@@ -1,0 +1,20 @@
+{
+  "strategy_gate": {
+    "kpi_tree_bound": false,
+    "approved": false
+  },
+  "compliance_gate": {
+    "documented": false,
+    "accepted_by_all": false
+  },
+  "capacity_gate": {
+    "rolling_weeks_feasible": 0
+  },
+  "data_gate": {
+    "dashboard_stable": false,
+    "reconcilable": false
+  },
+  "ownership_gate": {
+    "priority_query_coverage": 0
+  }
+}

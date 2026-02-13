@@ -1,0 +1,18 @@
+{
+  "structure_core": [
+    "technical_foundation",
+    "intent_operations",
+    "content_system"
+  ],
+  "performance_core": [
+    "onpage_optimization",
+    "aeo_answer_layer",
+    "schema_entity_governance",
+    "internal_link_graph"
+  ],
+  "acceleration_core": [
+    "authority_growth",
+    "experiment_engine",
+    "scale_loop"
+  ]
+}

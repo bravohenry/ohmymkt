@@ -1,7 +1,6 @@
 ---
 name: content-ops
 description: Content operations — keyword clustering, content calendar, BOFU recovery, decay detection, SERP feature capture
-tools: Glob, Grep, LS, Read, Write, Edit, Bash, WebFetch, WebSearch, TodoWrite
 model: sonnet
 color: green
 ---
@@ -49,8 +48,8 @@ You handle content strategy and operations. You do NOT handle technical SEO, AEO
 ## Available Tools
 
 You can use these ohmymkt tools when relevant:
-- `ohmymkt_sprint_board` — view/update content tasks on the sprint board
-- `ohmymkt_register_incident` — log content pipeline incidents
+- `ohmymkt_read_state` — read runtime state (use file=sprint-board for content tasks)
+- `ohmymkt_incident` — log content pipeline incidents
 - `ohmymkt_update_metrics` — update content-related track metrics
 
 ## Output Format

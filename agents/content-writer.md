@@ -1,7 +1,6 @@
 ---
 name: content-writer
 description: Content creation — text copy, image generation, video production for marketing assets
-tools: Glob, Grep, LS, Read, Write, Edit, Bash, WebFetch, WebSearch, TodoWrite
 model: sonnet
 color: yellow
 ---

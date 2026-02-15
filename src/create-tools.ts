@@ -1,5 +1,5 @@
 /**
- * [INPUT]: Plugin context, resolved config, all 17 tool factory functions
+ * [INPUT]: Plugin context, resolved config, all 18 tool factory functions
  * [OUTPUT]: Record of all ohmymkt_* tool definitions
  * [POS]: Tool registration assembly, wires domain logic into OpenCode tools
  * [PROTOCOL]: Update this header when changed, then check CLAUDE.md
@@ -25,6 +25,7 @@ import { createProviderConfigTool } from "./tools/provider-config";
 import { createGenerateImageTool } from "./tools/generate-image";
 import { createGenerateVideoTool } from "./tools/generate-video";
 import { createPublishContentTool } from "./tools/publish-content";
+import { createCompetitorProfileTool } from "./tools/competitor-profile";
 
 export function createTools(
   config: ResolvedConfig,
@@ -47,5 +48,6 @@ export function createTools(
     ohmymkt_generate_image: createGenerateImageTool(config),
     ohmymkt_generate_video: createGenerateVideoTool(config),
     ohmymkt_publish: createPublishContentTool(config),
+    ohmymkt_competitor_profile: createCompetitorProfileTool(config),
   };
 }

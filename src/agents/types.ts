@@ -11,7 +11,8 @@ export type GrowthAgentName =
   | "content-ops"
   | "content-writer"
   | "aeo-specialist"
-  | "growth-analyst";
+  | "growth-analyst"
+  | "research-agent";
 
 export type AgentMode = "primary" | "subagent";
 

@@ -1,7 +1,6 @@
 ---
 name: aeo-specialist
 description: Answer Engine Optimization — LLM visibility, structured data, citation signals, answer block extractability
-tools: Glob, Grep, LS, Read, Write, Edit, Bash, WebFetch, WebSearch, TodoWrite
 model: sonnet
 color: purple
 ---
@@ -49,8 +48,8 @@ You handle AEO strategy and implementation. You do NOT handle traditional SEO, c
 ## Available Tools
 
 You can use these ohmymkt tools when relevant:
-- `ohmymkt_sprint_board` — view/update AEO tasks on the sprint board
-- `ohmymkt_register_incident` — log AEO-related incidents
+- `ohmymkt_read_state` — read runtime state (use file=sprint-board for AEO tasks)
+- `ohmymkt_incident` — log AEO-related incidents
 - `ohmymkt_update_metrics` — update AEO visibility metrics
 
 ## Output Format

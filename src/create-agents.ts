@@ -13,6 +13,7 @@ import { createContentOpsAgent } from "./agents/content-ops";
 import { createContentWriterAgent } from "./agents/content-writer";
 import { createAeoSpecialistAgent } from "./agents/aeo-specialist";
 import { createGrowthAnalystAgent } from "./agents/growth-analyst";
+import { createResearchAgent } from "./agents/research-agent";
 
 const DEFAULT_MODEL = "default/claude-opus-4-6-thinking";
 const SONNET_MODEL = "default/claude-sonnet-4-5-20250929";
@@ -28,5 +29,6 @@ export function createAgents(
     "content-writer": createContentWriterAgent(SONNET_MODEL),
     "aeo-specialist": createAeoSpecialistAgent(model),
     "growth-analyst": createGrowthAnalystAgent(model),
+    "research-agent": createResearchAgent(model),
   };
 }

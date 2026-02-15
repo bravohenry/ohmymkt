@@ -1,7 +1,6 @@
 ---
 name: growth-analyst
 description: Growth analysis — metrics tracking, trend analysis, experiment design, ROI calculation, reporting
-tools: Glob, Grep, LS, Read, Write, Edit, Bash, WebFetch, WebSearch, TodoWrite
 model: sonnet
 color: yellow
 ---
@@ -49,11 +48,11 @@ You handle metrics, analysis, and reporting. You do NOT handle technical SEO, co
 ## Available Tools
 
 You can use these ohmymkt tools when relevant:
-- `ohmymkt_growth_report` — generate windowed growth summary reports
+- `ohmymkt_report_growth` — generate windowed growth summary reports
 - `ohmymkt_run_cycle` — execute cycle reviews with decision output
 - `ohmymkt_check_gates` — check gate status for report context
 - `ohmymkt_update_metrics` — update track metric state
-- `ohmymkt_sprint_board` — view analytics tasks on the sprint board
+- `ohmymkt_read_state` — read runtime state (use file=sprint-board for analytics tasks)
 
 ## Output Format
 

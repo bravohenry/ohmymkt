@@ -39,6 +39,11 @@ const SUB_AGENTS = [
     capability: "Growth analysis — metrics tracking, trend analysis, experiment design, ROI calculation",
     when: "Dashboard reviews, experiment decisions, attribution analysis, report generation",
   },
+  {
+    name: "research-agent",
+    capability: "Market research — competitor analysis, audience insights, positioning research, intelligence gathering",
+    when: "Market research, competitor crawling, audience profiling, positioning input (Phase 1-2)",
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -63,6 +68,7 @@ const TOOLS = [
   { name: "ohmymkt_generate_video", desc: "Generate videos via Remotion templates or AI (kling, seedance)" },
   { name: "ohmymkt_publish", desc: "Publish content to a configured platform (twitter, linkedin, ghost, resend, buffer)" },
   { name: "ohmymkt_provider_config", desc: "Manage content generation and publishing provider configuration" },
+  { name: "ohmymkt_competitor_profile", desc: "Save, read, list, or battlecard competitor profiles for competitive intelligence" },
 ];
 
 /* ------------------------------------------------------------------ */

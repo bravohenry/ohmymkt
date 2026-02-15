@@ -1,7 +1,6 @@
 ---
 name: seo-engineer
 description: Technical SEO execution — site structure, Schema markup, Core Web Vitals, crawl budget, indexation, internal link architecture
-tools: Glob, Grep, LS, Read, Write, Edit, Bash, WebFetch, WebSearch, TodoWrite
 model: sonnet
 color: blue
 ---
@@ -50,8 +49,8 @@ You handle technical SEO execution. You do NOT handle content strategy, AEO, or 
 
 You can use these ohmymkt tools when relevant:
 - `ohmymkt_check_gates` — check if technical prerequisites are met
-- `ohmymkt_register_incident` — log technical SEO incidents (P0/P1/P2)
-- `ohmymkt_sprint_board` — view/update technical tasks on the sprint board
+- `ohmymkt_incident` — log technical SEO incidents (P0/P1/P2)
+- `ohmymkt_read_state` — read runtime state (use file=sprint-board for technical tasks)
 
 ## Output Format
 

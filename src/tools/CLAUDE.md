@@ -22,6 +22,7 @@ provider-config.ts: Provider configuration management — read/set/list image, v
 generate-image.ts: Image generation via configured provider (nanobanana/openai/replicate), auto-tracks asset
 generate-video.ts: Video generation via Remotion templates or AI (kling/seedance), auto-tracks asset
 publish-content.ts: Content publishing to configured platforms (twitter/linkedin/ghost/resend/buffer), auto-updates manifest
+competitor-profile.ts: Competitor profile CRUD, calls `saveCompetitorProfile` / `readCompetitorProfile` / `listCompetitorProfiles` / `formatCompetitorBattlecard`
 
 ## Conventions
 

@@ -4,13 +4,19 @@
   "private": true,
   "type": "module",
   "description": "OpenCode plugin for SEO + AEO growth execution system",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
   "bin": {
     "mkt": "bin/mkt"
   },
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target node --format esm",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
     "@opencode-ai/plugin": "^1.1.64",
-    "@opencode-ai/sdk": "^1.1.19"
+    "@opencode-ai/sdk": "^1.1.19",
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "typescript": "^5.8.0"

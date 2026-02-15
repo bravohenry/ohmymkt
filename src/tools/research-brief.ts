@@ -26,7 +26,7 @@ export function createResearchBriefTool(config: ResolvedConfig): ToolDefinition 
       title: tool.schema.string().optional().describe("Brief title (for create)"),
       objectives: tool.schema.string().optional().describe("JSON array of objective strings (for create)"),
       competitors: tool.schema.string().optional().describe("JSON array of competitor strings (for create)"),
-      findings: tool.schema.string().optional().describe("JSON array of {source,finding,relevance,action} objects (for create)"),
+      findings: tool.schema.string().optional().describe("JSON array of {source,finding,relevance,action,category?,confidence?} objects (for create)"),
       gaps: tool.schema.string().optional().describe("JSON array of gap strings (for create)"),
     },
     execute: async (args) => {

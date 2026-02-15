@@ -1,8 +1,5 @@
 {
   "name": "ohmymkt",
-  "description": "SEO + AEO growth execution system — gate-driven campaigns, dual-track execution, cycle-based operations, and marketing automation",
-  "author": {
-    "name": "ohmymkt",
-    "email": "hello@ohmymkt.com"
-  }
+  "version": "0.2.0",
+  "description": "SEO + AEO growth execution system"
 }

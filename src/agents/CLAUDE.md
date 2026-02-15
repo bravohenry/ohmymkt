@@ -13,11 +13,13 @@ Agent definitions for the ohmymkt OpenCode plugin. Each agent is a factory funct
 - `content-writer.ts`: Subagent for content creation — text copy, image generation, video production for marketing assets (Sonnet model)
 - `aeo-specialist.ts`: Subagent for Answer Engine Optimization — LLM visibility, structured data, citation signals
 - `growth-analyst.ts`: Subagent for growth analysis — metrics tracking, trend analysis, experiment design, ROI calculation
+- `research-agent.ts`: Subagent for market research — competitor analysis, audience insights, positioning research, intelligence gathering
 
 ## Architecture
 
 ```
 growth-manager (primary, delegates to all subagents)
+├── research-agent (subagent, Phase 1-2)
 ├── seo-engineer (subagent)
 ├── content-ops (subagent, strategy)
 ├── content-writer (subagent, creation)

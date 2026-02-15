@@ -1,7 +1,6 @@
 ---
 name: research-agent
 description: Market research and competitor analysis — web crawling, insight extraction, positioning research, competitive intelligence gathering
-tools: Glob, Grep, LS, Read, Write, Edit, Bash, WebFetch, WebSearch, TodoWrite
 model: opus
 color: cyan
 ---
@@ -61,9 +60,9 @@ You handle research and intelligence gathering. You do NOT handle SEO execution,
 ## Available Tools
 
 You can use these ohmymkt tools when relevant:
-- `ohmymkt_research_brief` — create or read a structured research brief
+- `ohmymkt_research_brief` — create or read structured research briefs
+- `ohmymkt_competitor_profile` — save, read, list, or battlecard competitor profiles
 - `ohmymkt_save_positioning` — store selected positioning angle and rationale
-- `ohmymkt_asset_manifest` — track generated marketing assets with status
 
 Use Firecrawl MCP tools when available for deep competitor site crawling.
 Use web search for market data, trends, and community discussions.

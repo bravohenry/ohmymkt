@@ -1,6 +1,6 @@
 /**
  * [INPUT]: io.ts, constants.ts
- * [OUTPUT]: Research brief, positioning, and asset manifest CRUD functions
+ * [OUTPUT]: Research brief, competitor profile, positioning, and asset manifest CRUD functions
  * [POS]: Domain layer for Vibe Flow Phase 1-3 (research → positioning → assets → publish)
  * [PROTOCOL]: Update this header when changed, then check CLAUDE.md
  */
@@ -29,6 +29,25 @@ export interface ResearchFinding {
   finding: string;
   relevance: string;
   action: string;
+  category?: "competitor" | "audience" | "market" | "pricing" | "messaging" | "technical";
+  confidence?: "strong" | "moderate" | "weak";
+}
+
+export interface CompetitorProfile {
+  id: string;
+  name: string;
+  url?: string;
+  positioning: string;
+  pricing?: string;
+  strengths: string[];
+  weaknesses: string[];
+  features?: string[];
+  target_audience?: string;
+  differentiators?: string[];
+  threats?: string[];
+  opportunities?: string[];
+  observed_at: string;
+  updated_at: string;
 }
 
 export interface PositioningAngle {
@@ -75,6 +94,14 @@ function briefFile(projectRoot: string, id: string): string {
   return path.join(researchDir(projectRoot), `brief-${id}.json`);
 }
 
+function competitorDir(projectRoot: string): string {
+  return path.join(researchDir(projectRoot), "competitors");
+}
+
+function competitorFile(projectRoot: string, id: string): string {
+  return path.join(competitorDir(projectRoot), `${id}.json`);
+}
+
 function positioningFile(projectRoot: string): string {
   return path.join(researchDir(projectRoot), "positioning.json");
 }
@@ -118,6 +145,82 @@ export function listResearchBriefs(projectRoot: string): string[] {
   } catch {
     return [];
   }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Competitor Profiles                                                */
+/* ------------------------------------------------------------------ */
+
+export function saveCompetitorProfile(
+  projectRoot: string,
+  profile: Omit<CompetitorProfile, "id" | "observed_at" | "updated_at">,
+): CompetitorProfile {
+  const id = slugify(profile.name);
+  const now = nowIso();
+  const existing = readCompetitorProfile(projectRoot, id);
+  const full: CompetitorProfile = {
+    ...profile,
+    id,
+    observed_at: existing?.observed_at ?? now,
+    updated_at: now,
+  };
+  ensureDir(competitorDir(projectRoot));
+  writeJsonFile(competitorFile(projectRoot, id), full);
+  return full;
+}
+
+export function readCompetitorProfile(
+  projectRoot: string,
+  id: string,
+): CompetitorProfile | null {
+  return readJsonFile<CompetitorProfile | null>(competitorFile(projectRoot, id), null);
+}
+
+export function listCompetitorProfiles(projectRoot: string): string[] {
+  const dir = competitorDir(projectRoot);
+  try {
+    const fs = require("node:fs") as typeof import("node:fs");
+    if (!fs.existsSync(dir)) return [];
+    return fs.readdirSync(dir)
+      .filter((f: string) => f.endsWith(".json"))
+      .map((f: string) => f.replace(".json", ""));
+  } catch {
+    return [];
+  }
+}
+
+export function formatCompetitorProfile(p: CompetitorProfile): string {
+  const lines = [
+    `# Competitor: ${p.name}`,
+    `ID: ${p.id} | Observed: ${p.observed_at} | Updated: ${p.updated_at}`,
+    p.url ? `URL: ${p.url}` : "",
+    "",
+    `**Positioning**: ${p.positioning}`,
+    p.pricing ? `**Pricing**: ${p.pricing}` : "",
+    p.target_audience ? `**Target Audience**: ${p.target_audience}` : "",
+    "",
+    "## Strengths",
+    ...p.strengths.map((s) => `- ${s}`),
+    "",
+    "## Weaknesses",
+    ...p.weaknesses.map((w) => `- ${w}`),
+  ];
+  if (p.features?.length) lines.push("", "## Features", ...p.features.map((f) => `- ${f}`));
+  if (p.differentiators?.length) lines.push("", "## Differentiators", ...p.differentiators.map((d) => `- ${d}`));
+  if (p.threats?.length) lines.push("", "## Threats", ...p.threats.map((t) => `- ${t}`));
+  if (p.opportunities?.length) lines.push("", "## Opportunities", ...p.opportunities.map((o) => `- ${o}`));
+  return lines.filter(Boolean).join("\n");
+}
+
+export function formatCompetitorBattlecard(p: CompetitorProfile): string {
+  return [
+    `**${p.name}** — ${p.positioning}`,
+    p.pricing ? `Pricing: ${p.pricing}` : "",
+    `Strengths: ${p.strengths.join(", ")}`,
+    `Weaknesses: ${p.weaknesses.join(", ")}`,
+    p.threats?.length ? `Threats: ${p.threats.join(", ")}` : "",
+    p.opportunities?.length ? `Opportunities: ${p.opportunities.join(", ")}` : "",
+  ].filter(Boolean).join("\n");
 }
 
 /* ------------------------------------------------------------------ */
@@ -197,8 +300,13 @@ export function formatResearchBrief(brief: ResearchBrief): string {
     "",
     "## Findings",
     ...brief.findings.map(
-      (f, i) =>
-        `${i + 1}. **${f.finding}**\n   Source: ${f.source}\n   Relevance: ${f.relevance}\n   Action: ${f.action}`,
+      (f, i) => {
+        const meta = [
+          f.category ? `Category: ${f.category}` : "",
+          f.confidence ? `Confidence: ${f.confidence}` : "",
+        ].filter(Boolean).join(" | ");
+        return `${i + 1}. **${f.finding}**\n   Source: ${f.source}\n   Relevance: ${f.relevance}\n   Action: ${f.action}${meta ? `\n   ${meta}` : ""}`;
+      },
     ),
   ];
   if (brief.gaps.length > 0) {

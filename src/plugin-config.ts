@@ -1,73 +1,136 @@
-/**
- * [INPUT]: Plugin context from @opencode-ai/plugin, .ohmymkt/providers.json
- * [OUTPUT]: Zod-validated plugin configuration + provider config
- * [POS]: Configuration loading and validation for the ohmymkt plugin
- * [PROTOCOL]: Update this header when changed, then check CLAUDE.md
- */
+import * as fs from "fs";
+import * as path from "path";
+import { OhMyOpenCodeConfigSchema, type OhMyOpenCodeConfig } from "./config";
+import {
+  log,
+  deepMerge,
+  getOpenCodeConfigDir,
+  addConfigLoadError,
+  parseJsonc,
+  detectConfigFile,
+  migrateConfigFile,
+} from "./shared";
 
-import path from "node:path";
-import { z } from "zod";
-import { templatePaths, RUNTIME_DIR_NAME, type TemplatePaths } from "./domain/constants";
-import { readJsonFile } from "./domain/io";
+export function loadConfigFromPath(
+  configPath: string,
+  ctx: unknown
+): OhMyOpenCodeConfig | null {
+  try {
+    if (fs.existsSync(configPath)) {
+      const content = fs.readFileSync(configPath, "utf-8");
+      const rawConfig = parseJsonc<Record<string, unknown>>(content);
 
-/* ------------------------------------------------------------------ */
-/*  Schema                                                             */
-/* ------------------------------------------------------------------ */
+      migrateConfigFile(configPath, rawConfig);
 
-export const PluginConfigSchema = z.object({
-  disabled_tools: z.array(z.string()).optional().default([]),
-  disabled_hooks: z.array(z.string()).optional().default([]),
-});
+      const result = OhMyOpenCodeConfigSchema.safeParse(rawConfig);
 
-export type PluginConfig = z.infer<typeof PluginConfigSchema>;
+      if (!result.success) {
+        const errorMsg = result.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join(", ");
+        log(`Config validation error in ${configPath}:`, result.error.issues);
+        addConfigLoadError({
+          path: configPath,
+          error: `Validation error: ${errorMsg}`,
+        });
+        return null;
+      }
 
-/* ------------------------------------------------------------------ */
-/*  Provider config types                                              */
-/* ------------------------------------------------------------------ */
-
-export interface ProviderEntry {
-  provider: string;
-  api_key_env?: string;
-  url?: string;
-  project_path?: string;
-  options?: Record<string, unknown>;
+      log(`Config loaded from ${configPath}`, { agents: result.data.agents });
+      return result.data;
+    }
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    log(`Error loading config from ${configPath}:`, err);
+    addConfigLoadError({ path: configPath, error: errorMsg });
+  }
+  return null;
 }
 
-export interface ProvidersConfig {
-  image?: ProviderEntry;
-  video?: ProviderEntry;
-  video_template?: ProviderEntry;
-  publish?: Record<string, ProviderEntry>;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Resolved config (includes computed paths)                          */
-/* ------------------------------------------------------------------ */
-
-export interface ResolvedConfig extends PluginConfig {
-  projectRoot: string;
-  templatePaths: TemplatePaths;
-  providers: ProvidersConfig;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Loader                                                             */
-/* ------------------------------------------------------------------ */
-
-export function loadProvidersConfig(projectRoot: string): ProvidersConfig {
-  const file = path.join(projectRoot, RUNTIME_DIR_NAME, "providers.json");
-  return readJsonFile<ProvidersConfig>(file, {});
-}
-
-export function loadPluginConfig(directory: string): ResolvedConfig {
-  const pluginDir = decodeURIComponent(path.resolve(path.dirname(new URL(import.meta.url).pathname), ".."));
-  const tpl = templatePaths(pluginDir);
-
+export function mergeConfigs(
+  base: OhMyOpenCodeConfig,
+  override: OhMyOpenCodeConfig
+): OhMyOpenCodeConfig {
   return {
-    disabled_tools: [],
-    disabled_hooks: [],
-    projectRoot: directory,
-    templatePaths: tpl,
-    providers: loadProvidersConfig(directory),
+    ...base,
+    ...override,
+    agents: deepMerge(base.agents, override.agents),
+    categories: deepMerge(base.categories, override.categories),
+    disabled_agents: [
+      ...new Set([
+        ...(base.disabled_agents ?? []),
+        ...(override.disabled_agents ?? []),
+      ]),
+    ],
+    disabled_mcps: [
+      ...new Set([
+        ...(base.disabled_mcps ?? []),
+        ...(override.disabled_mcps ?? []),
+      ]),
+    ],
+    disabled_hooks: [
+      ...new Set([
+        ...(base.disabled_hooks ?? []),
+        ...(override.disabled_hooks ?? []),
+      ]),
+    ],
+    disabled_commands: [
+      ...new Set([
+        ...(base.disabled_commands ?? []),
+        ...(override.disabled_commands ?? []),
+      ]),
+    ],
+    disabled_skills: [
+      ...new Set([
+        ...(base.disabled_skills ?? []),
+        ...(override.disabled_skills ?? []),
+      ]),
+    ],
+    claude_code: deepMerge(base.claude_code, override.claude_code),
   };
+}
+
+export function loadPluginConfig(
+  directory: string,
+  ctx: unknown
+): OhMyOpenCodeConfig {
+  // User-level config path - prefer .jsonc over .json
+  const configDir = getOpenCodeConfigDir({ binary: "opencode" });
+  const userBasePath = path.join(configDir, "oh-my-opencode");
+  const userDetected = detectConfigFile(userBasePath);
+  const userConfigPath =
+    userDetected.format !== "none"
+      ? userDetected.path
+      : userBasePath + ".json";
+
+  // Project-level config path - prefer .jsonc over .json
+  const projectBasePath = path.join(directory, ".opencode", "oh-my-opencode");
+  const projectDetected = detectConfigFile(projectBasePath);
+  const projectConfigPath =
+    projectDetected.format !== "none"
+      ? projectDetected.path
+      : projectBasePath + ".json";
+
+  // Load user config first (base)
+  let config: OhMyOpenCodeConfig =
+    loadConfigFromPath(userConfigPath, ctx) ?? {};
+
+  // Override with project config
+  const projectConfig = loadConfigFromPath(projectConfigPath, ctx);
+  if (projectConfig) {
+    config = mergeConfigs(config, projectConfig);
+  }
+
+  config = {
+    ...config,
+  };
+
+  log("Final merged config", {
+    agents: config.agents,
+    disabled_agents: config.disabled_agents,
+    disabled_mcps: config.disabled_mcps,
+    disabled_hooks: config.disabled_hooks,
+    claude_code: config.claude_code,
+  });
+  return config;
 }

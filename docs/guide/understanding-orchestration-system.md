@@ -1,416 +1,445 @@
-<!--
-[INPUT]: Depends on docs/seo-aeo-growth-system-2026.md and gate/cycle/incident protocol implementations in src/lib.
-[OUTPUT]: Exposes a deep explanation of the Planner -> Execution Manager orchestration system.
-[POS]: Core architecture document in docs/guide, defining why this orchestration works and how to validate it.
-[PROTOCOL]: Update this header when changed, then check AGENTS.md
--->
-
 # Understanding the Orchestration System
 
-This document explains the internal orchestration design of `ohmymkt` in implementation-level detail.
-
-It is written to answer three questions:
-
-1. How strategy becomes executable work.
-2. How execution remains safe under growth pressure.
-3. How decisions stay auditable over time.
+Oh My OpenCode's orchestration system transforms a simple AI agent into a coordinated development team. This document explains how the Prometheus → Atlas → Junior workflow creates high-quality, reliable code output.
 
 ---
 
-## 1) Why Orchestration Exists
+## The Core Philosophy
 
-Most growth programs fail from one of these failure modes:
+Traditional AI coding tools follow a simple pattern: user asks → AI responds. This works for small tasks but fails for complex work because:
 
-1. They scale before foundation quality is stable.
-2. They optimize visibility while quality and business contribution decay.
-3. They publish activity but cannot explain decisions later.
+1. **Context overload**: Large tasks exceed context windows
+2. **Cognitive drift**: AI loses track of requirements mid-task
+3. **Verification gaps**: No systematic way to ensure completeness
+4. **Human = Bottleneck**: Requires constant user intervention
 
-`ohmymkt` solves this with a strict control model:
-
-- **Gate-first control**: no scale without startup readiness.
-- **Dual-track balancing**: visibility and quality must progress together.
-- **Decision loops**: every cadence yields `continue/intervene/rollback`.
-- **Incident protocol**: P0/P1/P2 events are first-class state transitions.
+The orchestration system solves these problems through **specialization and delegation**.
 
 ---
 
-## 2) System Goals
-
-The orchestration system is designed to guarantee four properties.
-
-| Property | What it means in practice |
-|---|---|
-| Safety | High-risk scale actions cannot bypass startup gates |
-| Coherence | Track-level and module-level work remain aligned |
-| Auditability | Decisions can be reconstructed from runtime artifacts |
-| Recoverability | Incident severity directly triggers intervention or rollback paths |
-
----
-
-## 3) Three-Layer Architecture
+## The Three-Layer Architecture
 
 ```mermaid
 flowchart TB
-  subgraph Planning["Planning Layer"]
-    U["User"]
-    P["Planner"]
-    RA["Requirements Analyst"]
-    PR["Plan Reviewer"]
-  end
-
-  subgraph Execution["Execution Layer"]
-    EM["Execution Manager"]
-  end
-
-  subgraph Domain["Domain Specialist Layer"]
-    T["Technical SEO Engineer"]
-    I["Intent Ops Specialist"]
-    C["Content Ops Manager"]
-    A["AEO Specialist"]
-    S["Schema & Entity Specialist"]
-    L["Internal Link Specialist"]
-    R["Authority & PR Manager"]
-    G["Growth Analyst"]
-  end
-
-  U --> P
-  P --> RA
-  RA --> P
-  P --> PR
-  PR --> P
-  P -->|"Approved Plan"| EM
-
-  EM --> T
-  EM --> I
-  EM --> C
-  EM --> A
-  EM --> S
-  EM --> L
-  EM --> R
-  EM --> G
+    subgraph Planning["Planning Layer (Human + Prometheus)"]
+        User[("👤 User")]
+        Prometheus["🔥 Prometheus<br/>(Planner)<br/>Claude Opus 4.5"]
+        Metis["🦉 Metis<br/>(Consultant)<br/>Claude Opus 4.5"]
+        Momus["👁️ Momus<br/>(Reviewer)<br/>GPT-5.2"]
+    end
+    
+    subgraph Execution["Execution Layer (Orchestrator)"]
+        Orchestrator["⚡ Atlas<br/>(Conductor)<br/>Claude Opus 4.5"]
+    end
+    
+    subgraph Workers["Worker Layer (Specialized Agents)"]
+        Junior["🪨 Sisyphus-Junior<br/>(Task Executor)<br/>Claude Sonnet 4.5"]
+        Oracle["🧠 Oracle<br/>(Architecture)<br/>GPT-5.2"]
+        Explore["🔍 Explore<br/>(Codebase Grep)<br/>Grok Code"]
+        Librarian["📚 Librarian<br/>(Docs/OSS)<br/>GLM-4.7"]
+        Frontend["🎨 Frontend<br/>(UI/UX)<br/>Gemini 3 Pro"]
+    end
+    
+    User -->|"Describe work"| Prometheus
+    Prometheus -->|"Consult"| Metis
+    Prometheus -->|"Interview"| User
+    Prometheus -->|"Generate plan"| Plan[".sisyphus/plans/*.md"]
+    Plan -->|"High accuracy?"| Momus
+    Momus -->|"OKAY / REJECT"| Prometheus
+    
+    User -->|"/start-work"| Orchestrator
+    Plan -->|"Read"| Orchestrator
+    
+    Orchestrator -->|"task(category)"| Junior
+    Orchestrator -->|"task(agent)"| Oracle
+    Orchestrator -->|"task(agent)"| Explore
+    Orchestrator -->|"task(agent)"| Librarian
+    Orchestrator -->|"task(agent)"| Frontend
+    
+    Junior -->|"Results + Learnings"| Orchestrator
+    Oracle -->|"Advice"| Orchestrator
+    Explore -->|"Code patterns"| Orchestrator
+    Librarian -->|"Documentation"| Orchestrator
+    Frontend -->|"UI code"| Orchestrator
 ```
 
-Layer responsibilities:
-
-1. **Planning Layer**: defines scope, preconditions, acceptance criteria.
-2. **Execution Layer**: applies control logic, cadence, and incident-aware decisions.
-3. **Domain Specialist Layer**: executes module-specific tasks under shared rules.
-
 ---
 
-## 4) Planning Layer Mechanics
+## Layer 1: Planning (Prometheus + Metis + Momus)
 
-### 4.1 Planner
+### Prometheus: Your Strategic Consultant
 
-Planner output must include:
+Prometheus is **not just a planner** - it's an intelligent interviewer that helps you think through what you actually need.
 
-1. Goal statement.
-2. Startup gate checklist.
-3. Role ownership matrix.
-4. Dual-track task baseline.
-5. Cadence and incident policy.
-
-Implementation mapping:
-
-- `src/lib/plans.mjs`
-- command: `plan-growth`
-- artifact: `.ohmymkt/plans/*.md`
-
-### 4.2 Requirements Analyst
-
-Requirements Analyst quality checks:
-
-1. Missing scope boundaries.
-2. Ambiguous acceptance criteria.
-3. Missing ownership.
-4. Hidden gate blockers.
-5. Missing rollback conditions.
-
-In this implementation, these checks are codified as process policy and then enforced downstream by gate/cycle constraints.
-
-### 4.3 Plan Reviewer
-
-Plan Reviewer validates:
-
-1. **Executability**: can work be dispatched without assumptions?
-2. **Verifiability**: can outcomes be measured from available artifacts?
-3. **Recoverability**: does the plan define incident pathways?
-
-No campaign should start if the plan cannot be resolved by `resolvePlan`.
-
----
-
-## 5) Execution Layer Mechanics
-
-Execution Manager is a control-plane role. It does not invent policy during runtime. It enforces existing policy.
-
-### 5.1 Startup Flow
+**The Interview Process:**
 
 ```mermaid
 stateDiagram-v2
-  [*] --> PlanReady
-  PlanReady --> GateCheck
-  GateCheck --> Blocked: Any gate fail
-  GateCheck --> CampaignStart: All gates pass
-  Blocked --> GateRemediation
-  GateRemediation --> GateCheck
-  CampaignStart --> ActiveExecution
-  ActiveExecution --> [*]
+    [*] --> Interview: User describes work
+    Interview --> Research: Launch explore/librarian agents
+    Research --> Interview: Gather codebase context
+    Interview --> ClearanceCheck: After each response
+    
+    ClearanceCheck --> Interview: Requirements unclear
+    ClearanceCheck --> PlanGeneration: All requirements clear
+    
+    state ClearanceCheck {
+        [*] --> Check
+        Check: ✓ Core objective defined?
+        Check: ✓ Scope boundaries established?
+        Check: ✓ No critical ambiguities?
+        Check: ✓ Technical approach decided?
+        Check: ✓ Test strategy confirmed?
+    }
+    
+    PlanGeneration --> MetisConsult: Mandatory gap analysis
+    MetisConsult --> WritePlan: Incorporate findings
+    WritePlan --> HighAccuracyChoice: Present to user
+    
+    HighAccuracyChoice --> MomusLoop: User wants high accuracy
+    HighAccuracyChoice --> Done: User accepts plan
+    
+    MomusLoop --> WritePlan: REJECTED - fix issues
+    MomusLoop --> Done: OKAY - plan approved
+    
+    Done --> [*]: Guide to /start-work
 ```
 
-Implementation mapping:
+**Intent-Specific Strategies:**
 
-- `src/lib/gates.mjs`
-- `src/lib/campaign.mjs`
-- commands: `check-gates`, `start-campaign`
+Prometheus adapts its interview style based on what you're doing:
 
-### 5.2 Gate Evaluation Contract
+| Intent | Prometheus Focus | Example Questions |
+|--------|------------------|-------------------|
+| **Refactoring** | Safety - behavior preservation | "What tests verify current behavior?" "Rollback strategy?" |
+| **Build from Scratch** | Discovery - patterns first | "Found pattern X in codebase. Follow it or deviate?" |
+| **Mid-sized Task** | Guardrails - exact boundaries | "What must NOT be included? Hard constraints?" |
+| **Architecture** | Strategic - long-term impact | "Expected lifespan? Scale requirements?" |
 
-Current gate conditions are deterministic and code-level enforced.
+### Metis: The Gap Analyzer
 
-| Gate key | Pass condition |
-|---|---|
-| `strategy_gate` | `kpi_tree_bound && approved` |
-| `compliance_gate` | `documented && accepted_by_all` |
-| `capacity_gate` | `rolling_weeks_feasible >= 8` |
-| `data_gate` | `dashboard_stable && reconcilable` |
-| `ownership_gate` | `priority_query_coverage >= 0.85` |
+Before Prometheus writes the plan, **Metis catches what Prometheus missed**:
 
-`start-campaign` blocks when any condition is false.
+- Hidden intentions in user's request
+- Ambiguities that could derail implementation
+- AI-slop patterns (over-engineering, scope creep)
+- Missing acceptance criteria
+- Edge cases not addressed
 
-### 5.3 Campaign Start Side Effects
+**Why Metis Exists:**
 
-On successful start:
+The plan author (Prometheus) has "ADHD working memory" - it makes connections that never make it onto the page. Metis forces externalization of implicit knowledge.
 
-1. Runtime skeleton directories are created.
-2. Template state files are seeded if missing.
-3. Notepad folder is created per active plan.
-4. Sprint board is generated from 40-task pool.
-5. `boulder.json` points to active plan.
-6. `execution.json` is set to active dual-track mode.
+### Momus: The Ruthless Reviewer
 
-### 5.4 Cycle Decision Engine
+For high-accuracy mode, Momus validates plans against **four core criteria**:
 
-Cycle decisions run by cadence (`weekly`, `monthly`, `quarterly`) in `src/lib/cycle.mjs`.
+1. **Clarity**: Does each task specify WHERE to find implementation details?
+2. **Verification**: Are acceptance criteria concrete and measurable?
+3. **Context**: Is there sufficient context to proceed without >10% guesswork?
+4. **Big Picture**: Is the purpose, background, and workflow clear?
 
-Decision rules in order:
+**The Momus Loop:**
 
-1. If `P0 > 0` in the observation window -> `rollback`.
-2. If visibility trend is up and quality trend is not up -> `intervene`.
-3. If both visibility and quality trend are up -> `continue`.
-4. Else -> `intervene`.
+Momus only says "OKAY" when:
+- 100% of file references verified
+- ≥80% of tasks have clear reference sources
+- ≥90% of tasks have concrete acceptance criteria
+- Zero tasks require assumptions about business logic
+- Zero critical red flags
 
-Trend signals:
-
-- Visibility: `non_brand_visibility_trend`, `query_cluster_coverage_trend`
-- Quality: `high_intent_session_trend`, `conversion_assist_trend`
-
-### 5.5 Cadence-Specific Action Augmentation
-
-- Weekly: base action bundle.
-- Monthly: base bundle + cluster investment rebalance.
-- Quarterly: base bundle + architecture governance review.
+If REJECTED, Prometheus fixes issues and resubmits. **No maximum retry limit.**
 
 ---
 
-## 6) Domain Specialist Layer
+## Layer 2: Execution (Atlas)
 
-Each specialist maps to one or more modules from `templates/modules.template.json`.
+### The Conductor Mindset
 
-| Specialist | Primary modules | Core accountability |
-|---|---|---|
-| Technical SEO Engineer | `technical_foundation` | crawl/index/render/performance reliability |
-| Intent Ops Specialist | `intent_operations` | query clustering and URL ownership integrity |
-| Content Ops Manager | `content_system` | dual-track content throughput and quality |
-| AEO Specialist | `aeo_answer_layer` | extractable answer structure and citation fitness |
-| Schema & Entity Specialist | `schema_entity_governance` | schema consistency and entity naming discipline |
-| Internal Link Specialist | `internal_link_graph` | navigational depth and bridge continuity |
-| Authority & PR Manager | `authority_growth` | relevance-first authority acquisition |
-| Growth Analyst | `experiment_engine`, `scale_loop` | controlled experiments and portfolio reallocation |
+The Orchestrator is like an orchestra conductor: **it doesn't play instruments, it ensures perfect harmony**.
 
-Dispatch baseline is generated from `templates/task-pool-40.json`.
-
----
-
-## 7) Runtime State and Artifact Contracts
-
-### 7.1 Directory Layout
-
-```text
-.ohmymkt/
-  plans/
-  notepads/<plan-name>/
-  incidents/
-  reports/
-    weekly/
-    monthly/
-    quarterly/
-    summary/
-  state/
-    gates.json
-    metrics.json
-    modules.json
-    sprint-board.json
-    execution.json
-    cycles.json
-  boulder.json
+```mermaid
+flowchart LR
+    subgraph Orchestrator["Atlas"]
+        Read["1. Read Plan"]
+        Analyze["2. Analyze Tasks"]
+        Wisdom["3. Accumulate Wisdom"]
+        Delegate["4. Delegate Tasks"]
+        Verify["5. Verify Results"]
+        Report["6. Final Report"]
+    end
+    
+    Read --> Analyze
+    Analyze --> Wisdom
+    Wisdom --> Delegate
+    Delegate --> Verify
+    Verify -->|"More tasks"| Delegate
+    Verify -->|"All done"| Report
+    
+    Delegate -->|"background=false"| Workers["Workers"]
+    Workers -->|"Results + Learnings"| Verify
 ```
 
-### 7.2 State Files
+**What Orchestrator CAN do:**
+- ✅ Read files to understand context
+- ✅ Run commands to verify results
+- ✅ Use lsp_diagnostics to check for errors
+- ✅ Search patterns with grep/glob/ast-grep
 
-| File | Producer | Consumer | Update trigger |
-|---|---|---|---|
-| `state/gates.json` | `check-gates` seeding or manual update | `check-gates`, `start-campaign`, `run-cycle`, `report-growth` | Gate checks and manual updates |
-| `state/metrics.json` | Seed from template then manual/system updates | `run-cycle` decision logic | Before each cycle |
-| `state/modules.json` | Seed from template | Operators and tooling | At startup or module governance updates |
-| `state/sprint-board.json` | `start-campaign` | Execution workflows | Campaign start and sprint refinement |
-| `state/execution.json` | `start-campaign` | `run-cycle` context | Campaign start and mode updates |
-| `state/cycles.json` | `run-cycle` | `report-growth` | On each cadence run |
-| `boulder.json` | `start-campaign` | Operators and orchestration context | Campaign activation |
+**What Orchestrator MUST delegate:**
+- ❌ Writing/editing code files
+- ❌ Fixing bugs
+- ❌ Creating tests
+- ❌ Git commits
 
-### 7.3 Incident Files
+### Wisdom Accumulation
 
-Each incident file under `.ohmymkt/incidents/` contains:
+The power of orchestration is **cumulative learning**. After each task:
 
-- `id`
-- `severity`
-- `module`
-- `summary`
-- `created_at`
+1. Extract learnings from subagent's response
+2. Categorize into: Conventions, Successes, Failures, Gotchas, Commands
+3. Pass forward to ALL subsequent subagents
 
-Allowed severity values are fixed: `P0`, `P1`, `P2`.
+This prevents repeating mistakes and ensures consistent patterns.
 
----
+**Notepad System:**
 
-## 8) Command-to-Orchestration Mapping
+```
+.sisyphus/notepads/{plan-name}/
+├── learnings.md      # Patterns, conventions, successful approaches
+├── decisions.md      # Architectural choices and rationales
+├── issues.md         # Problems, blockers, gotchas encountered
+├── verification.md   # Test results, validation outcomes
+└── problems.md       # Unresolved issues, technical debt
+```
 
-| Command | Orchestration responsibility | Primary files touched |
-|---|---|---|
-| `plan-growth` | Creates actionable planning artifact | `.ohmymkt/plans/*.md` |
-| `check-gates` | Evaluates startup readiness | `state/gates.json` |
-| `start-campaign` | Moves system from ready to active | `boulder.json`, `state/execution.json`, `state/sprint-board.json` |
-| `run-cycle` | Produces cadence decision and action plan | `reports/<cadence>/`, `state/cycles.json` |
-| `incident` | Records operational risk events | `incidents/*.json` |
-| `report-growth` | Produces management-level summary | `reports/summary/*.md` |
+### Parallel Execution
 
----
+Independent tasks run in parallel:
 
-## 9) Invariants (Hard Rules)
-
-These rules should never be violated.
-
-1. Scale cannot start if any startup gate fails.
-2. A cadence decision must always exist after each cycle run.
-3. P0 incidents must produce rollback decisions in the matching observation window.
-4. Sprint board items are not considered executable without `owner`, `due_date`, `kpi_impact`, and `rollback_condition`.
-5. Data conflicts must preserve both values with provenance and timestamps.
+```typescript
+// Orchestrator identifies parallelizable groups from plan
+// Group A: Tasks 2, 3, 4 (no file conflicts)
+task(category="ultrabrain", prompt="Task 2...")
+task(category="visual-engineering", prompt="Task 3...")
+task(category="general", prompt="Task 4...")
+// All run simultaneously
+```
 
 ---
 
-## 10) Failure and Recovery Paths
+## Layer 3: Workers (Specialized Agents)
 
-### 10.1 Startup Failure Path
+### Sisyphus-Junior: The Task Executor
 
-1. `check-gates` returns fail.
-2. System remains blocked from campaign start.
-3. Gate remediation actions are produced from gate reasons.
-4. Re-run `check-gates` after remediation.
+Junior is the **workhorse** that actually writes code. Key characteristics:
 
-### 10.2 Execution Degradation Path
+- **Focused**: Cannot delegate (blocked from task tool)
+- **Disciplined**: Obsessive todo tracking
+- **Verified**: Must pass lsp_diagnostics before completion
+- **Constrained**: Cannot modify plan files (READ-ONLY)
 
-1. `run-cycle` returns `intervene`.
-2. Remediation sprint is scheduled on failing modules.
-3. Next cycle must validate whether trends recovered.
+**Why Sonnet is Sufficient:**
 
-### 10.3 Critical Incident Path
+Junior doesn't need to be the smartest - it needs to be reliable. With:
+1. Detailed prompts from Orchestrator (50-200 lines)
+2. Accumulated wisdom passed forward
+3. Clear MUST DO / MUST NOT DO constraints
+4. Verification requirements
 
-1. P0 incident recorded.
-2. Next cycle returns `rollback` by rule.
-3. Scale modules are paused.
-4. Postmortem and prevention actions are mandatory.
+Even a mid-tier model executes precisely. The intelligence is in the **system**, not individual agents.
 
----
+### System Reminder Mechanism
 
-## 11) Validation Checklist for Operators
+The hook system ensures Junior never stops halfway:
 
-Use this checklist before claiming orchestration health.
+```
+[SYSTEM REMINDER - TODO CONTINUATION]
 
-1. All startup gates have reproducible pass evidence.
-2. Active plan is set in `boulder.json`.
-3. `execution.json` shows both tracks active.
-4. Sprint board metadata is complete for active tasks.
-5. At least one cycle report exists per required cadence.
-6. Incident files exist for all known incidents.
-7. Summary report recommendations are acted on or explicitly deferred.
+You have incomplete todos! Complete ALL before responding:
+- [ ] Implement user service ← IN PROGRESS
+- [ ] Add validation
+- [ ] Write tests
 
----
+DO NOT respond until all todos are marked completed.
+```
 
-## 12) Extension Points
-
-If you extend `ohmymkt`, keep these interfaces stable first.
-
-1. Command contract in `src/cli.mjs`.
-2. Gate state schema and pass logic in `src/lib/gates.mjs`.
-3. Cycle decision contract in `src/lib/cycle.mjs`.
-4. Incident severity protocol in `src/lib/incidents.mjs`.
-5. Report aggregation semantics in `src/lib/reports.mjs`.
-
-Recommended extension pattern:
-
-1. Add new module taxonomy in `modules.template.json`.
-2. Add dispatchable tasks in `task-pool-40.json` (or versioned successor).
-3. Add metric keys only with documented decision impact.
-4. Update handbook and guide docs in the same change set.
+This "boulder pushing" mechanism is why the system is named after Sisyphus.
 
 ---
 
-## 13) Sequence Example: Weekly Operations
+## The task Tool: Category + Skill System
+
+### Why Categories are Revolutionary
+
+**The Problem with Model Names:**
+
+```typescript
+// OLD: Model name creates distributional bias
+task(agent="gpt-5.2", prompt="...")  // Model knows its limitations
+task(agent="claude-opus-4.6", prompt="...")  // Different self-perception
+```
+
+**The Solution: Semantic Categories:**
+
+```typescript
+// NEW: Category describes INTENT, not implementation
+task(category="ultrabrain", prompt="...")     // "Think strategically"
+task(category="visual-engineering", prompt="...")  // "Design beautifully"
+task(category="quick", prompt="...")          // "Just get it done fast"
+```
+
+### Built-in Categories
+
+| Category | Model | When to Use |
+|----------|-------|-------------|
+| `visual-engineering` | Gemini 3 Pro | Frontend, UI/UX, design, styling, animation |
+| `ultrabrain` | GPT-5.2 Codex (xhigh) | Deep logical reasoning, complex architecture decisions |
+| `artistry` | Gemini 3 Pro (max) | Highly creative/artistic tasks, novel ideas |
+| `quick` | Claude Haiku 4.5 | Trivial tasks - single file changes, typo fixes |
+| `unspecified-low` | Claude Sonnet 4.5 | Tasks that don't fit other categories, low effort |
+| `unspecified-high` | Claude Opus 4.5 (max) | Tasks that don't fit other categories, high effort |
+| `writing` | Gemini 3 Flash | Documentation, prose, technical writing |
+
+### Custom Categories
+
+You can define your own categories:
+
+```json
+// .opencode/oh-my-opencode.json
+{
+  "categories": {
+    "unity-game-dev": {
+      "model": "openai/gpt-5.2",
+      "temperature": 0.3,
+      "prompt_append": "You are a Unity game development expert..."
+    }
+  }
+}
+```
+
+### Skills: Domain-Specific Instructions
+
+Skills prepend specialized instructions to subagent prompts:
+
+```typescript
+// Category + Skill combination
+task(
+  category="visual-engineering", 
+  load_skills=["frontend-ui-ux"],  // Adds UI/UX expertise
+  prompt="..."
+)
+
+task(
+  category="general",
+  load_skills=["playwright"],  // Adds browser automation expertise
+  prompt="..."
+)
+```
+
+**Example Evolution:**
+
+| Before | After |
+|--------|-------|
+| Hardcoded: `frontend-ui-ux-engineer` (Gemini 3 Pro) | `category="visual-engineering" + load_skills=["frontend-ui-ux"]` |
+| One-size-fits-all | `category="visual-engineering" + load_skills=["unity-master"]` |
+| Model bias | Category-based: model abstraction eliminates bias |
+
+---
+
+## The Orchestrator → Junior Workflow
 
 ```mermaid
 sequenceDiagram
-  participant O as Operator
-  participant C as CLI
-  participant G as Gate Engine
-  participant X as Campaign Engine
-  participant Y as Cycle Engine
-  participant I as Incident Store
-  participant R as Report Engine
-
-  O->>C: check-gates
-  C->>G: evaluateCurrentGates()
-  G-->>C: pass/fail + reasons
-
-  O->>C: start-campaign
-  C->>X: startCampaign()
-  X-->>C: blocked or started
-
-  O->>C: incident --severity P1 ...
-  C->>I: registerIncident()
-  I-->>C: incident file path
-
-  O->>C: run-cycle weekly
-  C->>Y: runCycle('weekly')
-  Y->>G: evaluateCurrentGates()
-  Y->>I: listIncidents(7d)
-  Y-->>C: decision + actions + report path
-
-  O->>C: report-growth --window 30d
-  C->>R: generateGrowthReport(30d)
-  R-->>C: summary report path
+    participant User
+    participant Orchestrator as Atlas
+    participant Junior as Sisyphus-Junior
+    participant Notepad as .sisyphus/notepads/
+    
+    User->>Orchestrator: /start-work
+    Orchestrator->>Orchestrator: Read plan, build parallelization map
+    
+    loop For each task (parallel when possible)
+        Orchestrator->>Notepad: Read accumulated wisdom
+        Orchestrator->>Orchestrator: Build 7-section prompt
+        
+        Note over Orchestrator: Prompt Structure:<br/>1. TASK (exact checkbox)<br/>2. EXPECTED OUTCOME<br/>3. REQUIRED SKILLS<br/>4. REQUIRED TOOLS<br/>5. MUST DO<br/>6. MUST NOT DO<br/>7. CONTEXT + Wisdom
+        
+        Orchestrator->>Junior: task(category, load_skills, prompt)
+        
+        Junior->>Junior: Create todos, execute
+        Junior->>Junior: Verify (lsp_diagnostics, tests)
+        Junior->>Notepad: Append learnings
+        Junior->>Orchestrator: Results + completion status
+        
+        Orchestrator->>Orchestrator: Verify independently
+        Note over Orchestrator: NEVER trust subagent claims<br/>Run lsp_diagnostics at PROJECT level<br/>Run full test suite<br/>Read actual changed files
+        
+        alt Verification fails
+            Orchestrator->>Junior: Re-delegate with failure context
+        else Verification passes
+            Orchestrator->>Orchestrator: Mark task complete, continue
+        end
+    end
+    
+    Orchestrator->>User: Final report with all results
 ```
 
 ---
 
-## 14) Practical Interpretation
+## Why This Architecture Works
 
-`ohmymkt` is not a content scheduler and not a dashboard wrapper.
+### 1. Separation of Concerns
 
-It is a governance engine for growth execution:
+- **Planning** (Prometheus): High reasoning, interview, strategic thinking
+- **Orchestration** (Atlas): Coordination, verification, wisdom accumulation
+- **Execution** (Junior): Focused implementation, no distractions
 
-1. Plans define intent.
-2. Gates enforce readiness.
-3. Cycles enforce decision discipline.
-4. Incidents enforce safety.
-5. Reports enforce accountability.
+### 2. Explicit Over Implicit
 
-When those five components are aligned, growth work becomes compounding rather than reactive.
+Every Junior prompt includes:
+- Exact task from plan
+- Clear success criteria
+- Forbidden actions
+- All accumulated wisdom
+- Reference files with line numbers
+
+No assumptions. No guessing.
+
+### 3. Trust But Verify
+
+The Orchestrator **never trusts subagent claims**:
+- Runs `lsp_diagnostics` at project level
+- Executes full test suite
+- Reads actual file changes
+- Cross-references requirements
+
+### 4. Model Optimization
+
+Expensive models (Opus, GPT-5.2) used only where needed:
+- Planning decisions (once per project)
+- Debugging consultation (rare)
+- Complex architecture (rare)
+
+Bulk work goes to cost-effective models (Sonnet, Haiku, Flash).
+
+---
+
+## Getting Started
+
+1. **Enter Prometheus Mode**: Press **Tab** at the prompt
+2. **Describe Your Work**: "I want to add user authentication to my app"
+3. **Answer Interview Questions**: Prometheus will ask about patterns, preferences, constraints
+4. **Review the Plan**: Check `.sisyphus/plans/` for generated work plan
+5. **Run `/start-work`**: Orchestrator takes over
+6. **Observe**: Watch tasks complete with verification
+7. **Done**: All todos complete, code verified, ready to ship
+
+---
+
+## Further Reading
+
+- [Overview](./overview.md) - Quick start guide
+- [Ultrawork Manifesto](../ultrawork-manifesto.md) - Philosophy behind the system
+- [Installation Guide](./installation.md) - Detailed installation instructions
+- [Configuration](../configurations.md) - Customize the orchestration

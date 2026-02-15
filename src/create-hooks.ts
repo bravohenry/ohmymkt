@@ -1,53 +1,61 @@
-/**
- * [INPUT]: Plugin context, resolved config, 4 hook factories from hooks/
- * [OUTPUT]: Hook collections for before/after/event lifecycle
- * [POS]: Hook registration assembly, wires hook definitions into plugin lifecycle
- * [PROTOCOL]: Update this header when changed, then check CLAUDE.md
- */
+import type { AvailableSkill } from "./agents/dynamic-agent-prompt-builder"
+import type { HookName, OhMyOpenCodeConfig } from "./config"
+import type { LoadedSkill } from "./features/opencode-skill-loader/types"
+import type { BackgroundManager } from "./features/background-agent"
+import type { PluginContext } from "./plugin/types"
 
-import type { ResolvedConfig } from "./plugin-config";
-import { createGateEnforcerHook } from "./hooks/gate-enforcer";
-import { createDualTrackBalanceHook } from "./hooks/dual-track-balance";
-import { createP0AutoEscalationHook } from "./hooks/p0-auto-escalation";
-import { createCycleReminderHook } from "./hooks/cycle-reminder";
+import { createCoreHooks } from "./plugin/hooks/create-core-hooks"
+import { createContinuationHooks } from "./plugin/hooks/create-continuation-hooks"
+import { createSkillHooks } from "./plugin/hooks/create-skill-hooks"
 
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
+export type CreatedHooks = ReturnType<typeof createHooks>
 
-type BeforeHook = {
-  before: (input: { tool: string; sessionID: string }, output: { args: Record<string, unknown> }) => Promise<void>;
-};
+export function createHooks(args: {
+  ctx: PluginContext
+  pluginConfig: OhMyOpenCodeConfig
+  backgroundManager: BackgroundManager
+  isHookEnabled: (hookName: HookName) => boolean
+  safeHookEnabled: boolean
+  mergedSkills: LoadedSkill[]
+  availableSkills: AvailableSkill[]
+}) {
+  const {
+    ctx,
+    pluginConfig,
+    backgroundManager,
+    isHookEnabled,
+    safeHookEnabled,
+    mergedSkills,
+    availableSkills,
+  } = args
 
-type AfterHook = {
-  after: (input: { tool: string; sessionID: string }, output: { title: string; output: string; metadata: unknown }) => Promise<void>;
-};
+  const core = createCoreHooks({
+    ctx,
+    pluginConfig,
+    isHookEnabled,
+    safeHookEnabled,
+  })
 
-type EventHook = {
-  event: (event: { type: string; properties?: Record<string, unknown> }) => Promise<void>;
-};
+  const continuation = createContinuationHooks({
+    ctx,
+    pluginConfig,
+    isHookEnabled,
+    safeHookEnabled,
+    backgroundManager,
+    sessionRecovery: core.sessionRecovery,
+  })
 
-export interface HookCollection {
-  beforeHooks: BeforeHook[];
-  afterHooks: AfterHook[];
-  eventHooks: EventHook[];
-}
+  const skill = createSkillHooks({
+    ctx,
+    isHookEnabled,
+    safeHookEnabled,
+    mergedSkills,
+    availableSkills,
+  })
 
-/* ------------------------------------------------------------------ */
-/*  Factory                                                            */
-/* ------------------------------------------------------------------ */
-
-export function createHooks(config: ResolvedConfig): HookCollection {
   return {
-    beforeHooks: [
-      createGateEnforcerHook(config),
-    ],
-    afterHooks: [
-      createDualTrackBalanceHook(config),
-      createP0AutoEscalationHook(config),
-    ],
-    eventHooks: [
-      createCycleReminderHook(config),
-    ],
-  };
+    ...core,
+    ...continuation,
+    ...skill,
+  }
 }

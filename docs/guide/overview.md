@@ -1,183 +1,168 @@
-<!--
-[INPUT]: Depends on the execution model in docs/seo-aeo-growth-system-2026.md and command interfaces in src/cli.mjs.
-[OUTPUT]: Exposes quickstart paths and operating modes for ohmymkt.
-[POS]: Entry document of docs/guide, connecting installation, orchestration, and execution.
-[PROTOCOL]: Update this header when changed, then check AGENTS.md
--->
+# Oh My OpenCode Overview
 
-# ohmymkt Overview
-
-This guide is the front door for the `ohmymkt` execution system.
-
-If you only read one file before running commands, read this file first.
+Learn about Oh My OpenCode, a plugin that transforms OpenCode into the best agent harness.
 
 ---
 
-## 1) What ohmymkt Is
+## TL;DR
 
-`ohmymkt` is a command-driven operating system for SEO + AEO growth.
+> **Sisyphus agent strongly recommends Opus 4.5 model. Using other models may result in significantly degraded experience.**
 
-It enforces three non-negotiable constraints:
+**Feeling lazy?** Just include `ultrawork` (or `ulw`) in your prompt. That's it. The agent figures out the rest.
 
-1. No scale without passing startup gates.
-2. No single-track growth. Visibility and quality must run together.
-3. No metric-only updates. Every cycle must end with an explicit decision: `continue`, `intervene`, or `rollback`.
+**Need precision?** Press **Tab** to enter Prometheus (Planner) mode, create a work plan through an interview process, then run `/start-work` to execute it with full orchestration.
 
 ---
 
-## 2) Who This Is For
+## What Oh My OpenCode Does for You
 
-| Role | Why this guide matters |
-|---|---|
-| SEO Lead | Owns gate standards and growth priorities |
-| Execution Manager | Runs cycle commands and decision loops |
-| Technical SEO Engineer | Uses technical foundation module standards |
-| Content Ops Manager | Runs dual-track output planning |
-| Growth Analyst | Maintains metric integrity and experiment decisions |
+- **Build features from descriptions**: Just tell the agent what you want. It makes a plan, writes the code, and ensures it works. Automatically. You don't have to care about the details.
+- **Debug and fix issues**: Describe a bug or paste an error. The agent analyzes your codebase, identifies the problem, and implements a fix.
+- **Navigate any codebase**: Ask anything about your codebase. The agent maintains awareness of your entire project structure.
+- **Automate tedious tasks**: Fix lint issues, resolve merge conflicts, write release notes - all in a single command.
 
 ---
 
-## 3) Document Map
+## Two Ways to Work
 
-| Document | Purpose | Read timing |
-|---|---|---|
-| `docs/guide/overview.md` | Navigation and operating model | First |
-| `docs/guide/installation.md` | Environment bootstrap and first-run validation | Before running commands |
-| `docs/guide/understanding-orchestration-system.md` | Architecture internals and control loops | After first successful run |
-| `docs/seo-aeo-growth-system-2026.md` | Canonical execution handbook and policy | Ongoing reference |
+### Option 1: Ultrawork Mode (For Quick Work)
 
----
+If you're feeling lazy, just include **`ultrawork`** (or **`ulw`**) in your prompt:
 
-## 4) System Lifecycle
-
-```mermaid
-flowchart LR
-  A["Define Goal"] --> B["plan-growth"]
-  B --> C["check-gates"]
-  C -->|"All Pass"| D["start-campaign"]
-  C -->|"Any Fail"| E["Gate Remediation"]
-  E --> C
-  D --> F["run-cycle weekly"]
-  F --> G["Decision: continue / intervene / rollback"]
-  G --> H["report-growth"]
+```
+ulw add authentication to my Next.js app
 ```
 
-Lifecycle states in practice:
+The agent will automatically:
+1. Explore your codebase to understand existing patterns
+2. Research best practices via specialized agents
+3. Implement the feature following your conventions
+4. Verify with diagnostics and tests
+5. Keep working until complete
 
-1. Planning state: plan exists, campaign not started.
-2. Gate remediation state: startup blocked until all gates pass.
-3. Active campaign state: dual-track work and periodic cycles running.
-4. Incident state: P0/P1/P2 entries affect cycle decisions.
-5. Reporting state: weekly/monthly/quarterly plus aggregate summaries.
+This is the "just do it" mode. Full automatic mode.
+The agent is already smart enough, so it explores the codebase and make plans itself.
+**You don't have to think that deep. Agent will think that deep.**
 
----
+### Option 2: Prometheus Mode (For Precise Work)
 
-## 5) Core Commands
+For complex or critical tasks, press **Tab** to switch to Prometheus (Planner) mode.
 
-| Command | Main output | Hard stop conditions |
-|---|---|---|
-| `plan-growth` | Plan markdown file under `.ohmymkt/plans/` | Empty goal string |
-| `check-gates` | Gate report and pass/fail exit code | None |
-| `start-campaign` | Boulder state + execution state + sprint board | Any gate fails or no plan exists |
-| `run-cycle` | Cycle report + decision + actions | Invalid cadence |
-| `incident` | Incident JSON record | Missing severity or summary |
-| `report-growth` | Windowed summary report | Invalid window format falls back to default |
+**How it works:**
 
----
+1. **Prometheus interviews you** - Acts as your personal consultant, asking clarifying questions while researching your codebase to understand exactly what you need.
 
-## 6) Runtime Artifact Map
+2. **Plan generation** - Based on the interview, Prometheus generates a detailed work plan with tasks, acceptance criteria, and guardrails. Optionally reviewed by Momus (plan reviewer) for high-accuracy validation.
 
-After first successful startup, `.ohmymkt/` is your source of truth.
+3. **Run `/start-work`** - The Atlas takes over:
+   - Distributes tasks to specialized sub-agents
+   - Verifies each task completion independently
+   - Accumulates learnings across tasks
+   - Tracks progress across sessions (resume anytime)
 
-| Path | Function |
-|---|---|
-| `.ohmymkt/plans/*.md` | Approved growth plans |
-| `.ohmymkt/state/gates.json` | Startup gate inputs |
-| `.ohmymkt/state/metrics.json` | Dual-track trend inputs |
-| `.ohmymkt/state/modules.json` | Module grouping by execution tier |
-| `.ohmymkt/state/sprint-board.json` | 40-item dispatch board with owner/due/KPI/rollback fields |
-| `.ohmymkt/state/execution.json` | Active execution mode and track states |
-| `.ohmymkt/state/cycles.json` | Historical cycle decisions |
-| `.ohmymkt/boulder.json` | Active plan pointer and execution session metadata |
-| `.ohmymkt/incidents/*.json` | P0/P1/P2 incident records |
-| `.ohmymkt/reports/**` | Weekly/monthly/quarterly and summary reports |
+**When to use Prometheus:**
+- Multi-day or multi-session projects
+- Critical production changes
+- Complex refactoring spanning many files
+- When you want a documented decision trail
 
 ---
 
-## 7) Gate-First Rule (Critical)
+## Critical Usage Guidelines
 
-`start-campaign` is intentionally blocked when any startup gate fails.
+### Always Use Prometheus + Orchestrator Together
 
-Minimum pass conditions in current implementation:
+**Do NOT use `atlas` without `/start-work`.**
 
-- `strategy_gate`: `kpi_tree_bound=true` and `approved=true`
-- `compliance_gate`: `documented=true` and `accepted_by_all=true`
-- `capacity_gate`: `rolling_weeks_feasible >= 8`
-- `data_gate`: `dashboard_stable=true` and `reconcilable=true`
-- `ownership_gate`: `priority_query_coverage >= 0.85`
+The orchestrator is designed to execute work plans created by Prometheus. Using it directly without a plan leads to unpredictable behavior.
 
-This is not advisory text. It is executable logic in `src/lib/gates.mjs`.
+**Correct workflow:**
+```
+1. Press Tab → Enter Prometheus mode
+2. Describe work → Prometheus interviews you
+3. Confirm plan → Review .sisyphus/plans/*.md
+4. Run /start-work → Orchestrator executes
+```
 
----
-
-## 8) Dual-Track Rule (Critical)
-
-Decision engine behavior in `src/lib/cycle.mjs`:
-
-- If any P0 incident exists in the observation window, decision is `rollback`.
-- If visibility trend is up and quality trend is not up, decision is `intervene`.
-- If visibility and quality are both up, decision is `continue`.
-- Otherwise decision defaults to `intervene`.
-
-Visibility trend keys:
-
-- `visibility_track.non_brand_visibility_trend`
-- `visibility_track.query_cluster_coverage_trend`
-
-Quality trend keys:
-
-- `quality_track.high_intent_session_trend`
-- `quality_track.conversion_assist_trend`
+**Prometheus and Atlas are a pair. Always use them together.**
 
 ---
 
-## 9) Typical First Week Runbook
+## Model Configuration
 
-1. Create a plan with `plan-growth`.
-2. Populate gate fields in `.ohmymkt/state/gates.json`.
-3. Run `check-gates` until all pass.
-4. Start campaign with `start-campaign`.
-5. Assign owner/due/KPI/rollback values in sprint board.
-6. Run first `run-cycle weekly`.
-7. Register incidents if needed using `incident`.
-8. Generate first aggregate `report-growth --window 7d`.
+Oh My OpenCode automatically configures models based on your available providers. You don't need to manually specify every model.
+
+### How Models Are Determined
+
+**1. At Installation Time (Interactive Installer)**
+
+When you run `bunx oh-my-opencode install`, the installer asks which providers you have:
+- Claude Pro/Max subscription?
+- OpenAI/ChatGPT Plus?
+- Google Gemini?
+- GitHub Copilot?
+- OpenCode Zen?
+- Z.ai Coding Plan?
+
+Based on your answers, it generates `~/.config/opencode/oh-my-opencode.json` with optimal model assignments for each agent and category.
+
+**2. At Runtime (Fallback Chain)**
+
+Each agent has a **provider priority chain**. The system tries providers in order until it finds an available model:
+
+```
+Example: multimodal-looker
+google → openai → zai-coding-plan → anthropic → opencode
+   ↓        ↓           ↓              ↓           ↓
+gemini   gpt-5.2     glm-4.6v       haiku     gpt-5-nano
+```
+
+If you have Gemini, it uses `google/gemini-3-flash`. No Gemini but have Claude? Uses `anthropic/claude-haiku-4-5`. And so on.
+
+### Example Configuration
+
+Here's a real-world config for a user with **Claude, OpenAI, Gemini, and Z.ai** all available:
+
+```jsonc
+{
+  "$schema": "https://raw.githubusercontent.com/code-yeongyu/oh-my-opencode/master/assets/oh-my-opencode.schema.json",
+  "agents": {
+    // Override specific agents only - rest use fallback chain
+    "atlas": { "model": "anthropic/claude-sonnet-4-5", "variant": "max" },
+    "librarian": { "model": "zai-coding-plan/glm-4.7" },
+    "explore": { "model": "opencode/gpt-5-nano" },
+    "multimodal-looker": { "model": "zai-coding-plan/glm-4.6v" }
+  },
+  "categories": {
+    // Override categories for cost optimization
+    "quick": { "model": "opencode/gpt-5-nano" },
+    "unspecified-low": { "model": "zai-coding-plan/glm-4.7" }
+  },
+  "experimental": {
+    "aggressive_truncation": true
+  }
+}
+```
+
+**Key points:**
+- You only need to override what you want to change
+- Unspecified agents/categories use the automatic fallback chain
+- Mix providers freely (Claude for main work, Z.ai for cheap tasks, etc.)
+
+### Finding Available Models
+
+Run `opencode models` to see all available models in your environment. Model names follow the format `provider/model-name`.
+
+### Learn More
+
+For detailed configuration options including per-agent settings, category customization, and more, see the [Configuration Guide](../configurations.md).
 
 ---
 
-## 10) Anti-Patterns to Avoid
+## Next Steps
 
-1. Starting campaign before gates pass.
-2. Running only visibility track while quality remains flat/down.
-3. Logging incidents outside the incident command flow.
-4. Treating cycle output as informational instead of decision-binding.
-5. Overwriting conflicting metrics without dual-value retention policy.
-
----
-
-## 11) Success Criteria for Initial Adoption
-
-A healthy first adoption is complete when all conditions are true:
-
-1. At least one plan exists and is referenced by `boulder.json`.
-2. All startup gates have passed at least once.
-3. One weekly cycle report exists with a clear decision and actions.
-4. Sprint board fields (`owner`, `due_date`, `kpi_impact`, `rollback_condition`) are filled for active tasks.
-5. One summary report exists and recommendations are actionable.
-
----
-
-## 12) Next Reading
-
-1. For setup and environment validation: `docs/guide/installation.md`
-2. For architecture internals and role choreography: `docs/guide/understanding-orchestration-system.md`
-3. For full policy and module SOPs: `docs/seo-aeo-growth-system-2026.md`
+- [Understanding the Orchestration System](./understanding-orchestration-system.md) - Deep dive into Prometheus → Orchestrator → Junior workflow
+- [Ultrawork Manifesto](../ultrawork-manifesto.md) - Philosophy and principles behind Oh My OpenCode
+- [Installation Guide](./installation.md) - Detailed installation instructions
+- [Configuration Guide](../configurations.md) - Customize agents, models, and behaviors
+- [Features Reference](../features.md) - Complete feature documentation

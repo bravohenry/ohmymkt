@@ -1,63 +1,105 @@
-/**
- * [INPUT]: Plugin context from @opencode-ai/plugin
- * [OUTPUT]: Fully wired OhmymktPlugin instance
- * [POS]: Plugin factory entry point — the single export OpenCode loads
- * [PROTOCOL]: Update this header when changed, then check CLAUDE.md
- */
+import type { Plugin } from "@opencode-ai/plugin"
 
-import path from "node:path";
-import type { Plugin } from "@opencode-ai/plugin";
-import { loadPluginConfig } from "./plugin-config";
-import { createTools } from "./create-tools";
-import { createHooks } from "./create-hooks";
+import type { HookName } from "./config"
 
-const PLUGIN_ROOT = decodeURIComponent(path.resolve(path.dirname(new URL(import.meta.url).pathname), ".."));
-const SKILLS_DIR = path.join(PLUGIN_ROOT, "skills");
+import { createHooks } from "./create-hooks"
+import { createManagers } from "./create-managers"
+import { createTools } from "./create-tools"
+import { createPluginInterface } from "./plugin-interface"
 
-/* ------------------------------------------------------------------ */
-/*  Plugin factory                                                     */
-/* ------------------------------------------------------------------ */
+import { loadPluginConfig } from "./plugin-config"
+import { createModelCacheState } from "./plugin-state"
+import { createFirstMessageVariantGate } from "./shared/first-message-variant"
+import { injectServerAuthIntoClient, log } from "./shared"
+import { startTmuxCheck } from "./tools"
 
-const OhmymktPlugin: Plugin = async (ctx) => {
-  const config = loadPluginConfig(ctx.directory);
-  const tools = createTools(config);
-  const hooks = createHooks(config);
+const OhMyOpenCodePlugin: Plugin = async (ctx) => {
+  log("[OhMyOpenCodePlugin] ENTRY - plugin loading", {
+    directory: ctx.directory,
+  })
+
+  injectServerAuthIntoClient(ctx.client)
+  startTmuxCheck()
+
+  const pluginConfig = loadPluginConfig(ctx.directory, ctx)
+  const disabledHooks = new Set(pluginConfig.disabled_hooks ?? [])
+
+  const isHookEnabled = (hookName: HookName): boolean => !disabledHooks.has(hookName)
+  const safeHookEnabled = pluginConfig.experimental?.safe_hook_creation ?? true
+
+  const firstMessageVariantGate = createFirstMessageVariantGate()
+
+  const tmuxConfig = {
+    enabled: pluginConfig.tmux?.enabled ?? false,
+    layout: pluginConfig.tmux?.layout ?? "main-vertical",
+    main_pane_size: pluginConfig.tmux?.main_pane_size ?? 60,
+    main_pane_min_width: pluginConfig.tmux?.main_pane_min_width ?? 120,
+    agent_pane_min_width: pluginConfig.tmux?.agent_pane_min_width ?? 40,
+  }
+
+  const modelCacheState = createModelCacheState()
+
+  const managers = createManagers({
+    ctx,
+    pluginConfig,
+    tmuxConfig,
+    modelCacheState,
+  })
+
+  const toolsResult = await createTools({
+    ctx,
+    pluginConfig,
+    managers,
+  })
+
+  const hooks = createHooks({
+    ctx,
+    pluginConfig,
+    backgroundManager: managers.backgroundManager,
+    isHookEnabled,
+    safeHookEnabled,
+    mergedSkills: toolsResult.mergedSkills,
+    availableSkills: toolsResult.availableSkills,
+  })
+
+  const pluginInterface = createPluginInterface({
+    ctx,
+    pluginConfig,
+    firstMessageVariantGate,
+    managers,
+    hooks,
+    tools: toolsResult.filteredTools,
+  })
 
   return {
-    tool: tools,
+    ...pluginInterface,
 
-    async config(cfg) {
-      const c = cfg as Record<string, unknown>;
-      const skills = (c.skills ?? {}) as Record<string, unknown>;
-      const existingPaths = (skills.paths ?? []) as string[];
-      skills.paths = [...existingPaths, SKILLS_DIR];
-      c.skills = skills;
-    },
-
-    async event({ event }) {
-      for (const hook of hooks.eventHooks) {
-        await hook.event(event);
+    "experimental.session.compacting": async (
+      _input: { sessionID: string },
+      output: { context: string[] },
+    ): Promise<void> => {
+      await hooks.compactionTodoPreserver?.capture(_input.sessionID)
+      if (!hooks.compactionContextInjector) {
+        return
       }
+      output.context.push(hooks.compactionContextInjector())
     },
+  }
+}
 
-    async "tool.execute.before"(input, output) {
-      for (const hook of hooks.beforeHooks) {
-        await hook.before(
-          input as { tool: string; sessionID: string },
-          output as { args: Record<string, unknown> },
-        );
-      }
-    },
+export default OhMyOpenCodePlugin
 
-    async "tool.execute.after"(input, output) {
-      for (const hook of hooks.afterHooks) {
-        await hook.after(
-          input as { tool: string; sessionID: string },
-          output as { title: string; output: string; metadata: unknown },
-        );
-      }
-    },
-  };
-};
+export type {
+  OhMyOpenCodeConfig,
+  AgentName,
+  AgentOverrideConfig,
+  AgentOverrides,
+  McpName,
+  HookName,
+  BuiltinCommandName,
+} from "./config"
 
-export default OhmymktPlugin;
+// NOTE: Do NOT export functions from main index.ts!
+// OpenCode treats ALL exports as plugin instances and calls them.
+// Config error utilities are available via "./shared/config-errors" for internal use only.
+export type { ConfigLoadError } from "./shared/config-errors"

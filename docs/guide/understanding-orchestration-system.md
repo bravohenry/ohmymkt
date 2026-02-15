@@ -1,44 +1,42 @@
 # Understanding the Marketing Orchestration System
 
-This document explains how `ohmymkt` runs a full marketing workflow on top of the upstream OpenCode engine.
-
-The core idea is strict separation:
-
-1. Planning decisions
-2. Execution routing
-3. Domain production
-4. Runtime state + measurement
+This document is the architecture-level contract for `ohmymkt`.
+It describes runtime routing, role boundaries, state transitions, and failure handling.
 
 ---
 
-## Why This Design
+## 1. System Purpose
 
-Single-agent prompting breaks down for growth execution:
+`ohmymkt` converts open-ended user prompts into controlled growth execution by enforcing:
 
-- strategy quality drops when execution details flood context
-- channel-specific constraints are missed
-- progress and metrics are not persisted consistently
-
-`ohmymkt` solves this with layered agents and shared runtime tools.
+1. planning quality gates
+2. execution ownership boundaries
+3. stateful runtime persistence
+4. measurable reporting loops
 
 ---
 
-## Layered Topology
+## 2. End-to-End Topology
 
 ```mermaid
 flowchart TB
-    U["User"] --> GM["growth-manager (primary)"]
+    U["User"] --> MSG["Prompt"]
+    MSG --> KD["Keyword Detector"]
+    KD -->|ulw/ultrawork| UWM["Ultrawork Source Router"]
+    KD -->|normal prompt| GM["growth-manager"]
 
-    subgraph Planning["Planning Layer"]
+    UWM -->|source=marketing| GM
+
+    subgraph PLAN["Planning Layer"]
       GM --> RA["requirements-analyst"]
       GM --> PR["plan-reviewer"]
       RA --> GM
       PR --> GM
     end
 
-    GM --> EM["execution-manager"]
+    GM -->|approved plan| EM["execution-manager"]
 
-    subgraph Specialist["Domain Specialist Layer"]
+    subgraph EXEC["Domain Specialist Layer"]
       EM --> AEO["aeo-specialist"]
       EM --> CO["content-ops"]
       EM --> CW["content-writer"]
@@ -47,105 +45,180 @@ flowchart TB
       EM --> SEO["seo-engineer"]
     end
 
-    EM --> Tools["ohmymkt_* runtime tools"]
-    Tools --> State[".ohmymkt/"]
+    EXEC --> TR["Tool Registry"]
+    TR --> ORT["18 ohmymkt_* tools"]
+    ORT --> FS[".ohmymkt/*"]
+    FS --> OUT["report + next cycle actions"]
+    OUT --> U
 ```
 
 ---
 
-## Layer Responsibilities
+## 3. Ultrawork Source Routing Contract
 
-## 1) Planning Layer
+```mermaid
+flowchart LR
+    IN["Current agent name"] --> R{"source-detector"}
+    R -->|growth-manager| M["marketing"]
+    R -->|execution-manager| M
+    R -->|plan-reviewer| M
+    R -->|requirements-analyst| M
+    R -->|other agent| O["existing non-marketing branches"]
+    M --> T["marketing ultrawork template"]
+    T --> C["No oracle/librarian/explore/plan injection"]
+```
+
+Behavioral guarantee:
+
+- marketing sessions only receive marketing hierarchy instructions
+- disabled legacy agents are not reintroduced through template text
+
+---
+
+## 4. Layer Responsibilities and Boundaries
+
+## 4.1 Planning Layer
 
 ### `growth-manager`
 
-- owns objective framing and prioritization
-- picks execution path and sequencing
-- decides whether to iterate plan or execute now
+- owns objective framing, priority, and scope boundaries
+- chooses whether to iterate planning or proceed to execution
+- is final planner authority before execution handoff
 
 ### `requirements-analyst`
 
-- turns user intent into explicit requirements
-- identifies missing inputs, dependencies, and risks
-- defines measurable acceptance criteria
+- converts user intent to explicit requirements
+- extracts dependencies, constraints, and unknowns
+- writes measurable acceptance criteria
 
 ### `plan-reviewer`
 
-- stress-tests plan coherence
-- blocks weak plans (vague outputs, unowned tasks, missing validation)
-- enforces feasibility and verification gates
+- validates completeness and coherence
+- rejects plans with ambiguous ownership or unverifiable outcomes
+- gates execution entry
 
----
+Planning invariant:
 
-## 2) Execution Layer
+- no execution dispatch without clear acceptance criteria and ownership mapping
+
+## 4.2 Execution Layer
 
 ### `execution-manager`
 
-- dispatches work to domain specialists
-- chooses tool calls (`ohmymkt_*`) for stateful actions
-- enforces cadence, dependencies, and completion checks
+- turns approved plan into delegated specialist tasks
+- sequences tasks by dependency and cadence
+- owns runtime tool orchestration (`ohmymkt_*`)
+- consolidates output into operator-facing report
 
-`execution-manager` is the only layer that should orchestrate multi-specialist execution loops.
+Execution invariant:
 
----
+- stateful actions must go through runtime tools, not free-form text memory
 
-## 3) Domain Specialist Layer
+## 4.3 Domain Specialist Layer
 
-- `aeo-specialist`: answer-engine optimization and citation-safe structures
-- `content-ops`: editorial operations and publishing workflow
-- `content-writer`: copy assets (text/image/video briefs)
-- `growth-analyst`: measurement, diagnosis, iteration decisions
-- `research-agent`: market/competitor signal gathering
-- `seo-engineer`: technical SEO, structure, indexability, schema
+- `aeo-specialist`: answer engine discoverability and retrieval-safe formatting
+- `content-ops`: editorial workflow, channel scheduling, publishing cadence
+- `content-writer`: copy asset creation (text/image/video prompts and drafts)
+- `growth-analyst`: metrics diagnosis, hypothesis ranking, iteration decisions
+- `research-agent`: market signal collection and competitor intelligence
+- `seo-engineer`: technical SEO, structure, schema, indexability
 
-These specialists are intentionally narrow; orchestration stays above them.
+Specialist invariant:
 
----
-
-## Tool Contract (`ohmymkt_*`)
-
-All marketing flows use the same 18-tool namespace from `src/tools/ohmymkt/`.
-
-Critical paths:
-
-- plan/gate: `ohmymkt_plan_growth`, `ohmymkt_check_gates`, `ohmymkt_update_gates`
-- launch/cycle: `ohmymkt_start_campaign`, `ohmymkt_run_cycle`, `ohmymkt_incident`
-- reporting/state: `ohmymkt_report_growth`, `ohmymkt_read_state`, `ohmymkt_update_metrics`
-- research/content/publish: `ohmymkt_research_brief`, `ohmymkt_competitor_profile`, `ohmymkt_save_positioning`, `ohmymkt_asset_manifest`, `ohmymkt_generate_image`, `ohmymkt_generate_video`, `ohmymkt_publish`, `ohmymkt_provider_config`
-
-This unifies agent prompts, skills, and runtime behavior.
+- specialists execute domain tasks; they do not redefine orchestration policy
 
 ---
 
-## Ultrawork Behavior
+## 5. Tool Contract and Family Graph
 
-`ultrawork` routing now includes a `marketing` source.
+```mermaid
+flowchart TB
+    subgraph PF["Plan Family"]
+      P1["ohmymkt_plan_growth"]
+      P2["ohmymkt_list_plans"]
+    end
 
-When source is marketing (`growth-manager`, `execution-manager`, `plan-reviewer`, `requirements-analyst`):
+    subgraph GF["Gate Family"]
+      G1["ohmymkt_check_gates"]
+      G2["ohmymkt_update_gates"]
+    end
 
-- injects marketing-specific ultrawork guidance
-- references only marketing agents
-- avoids disabled legacy agent instructions (`oracle`, `librarian`, `explore`, `plan`)
+    subgraph CF["Campaign Family"]
+      C1["ohmymkt_start_campaign"]
+      C2["ohmymkt_run_cycle"]
+      C3["ohmymkt_incident"]
+    end
+
+    subgraph SF["State & Metrics Family"]
+      S1["ohmymkt_read_state"]
+      S2["ohmymkt_update_metrics"]
+      S3["ohmymkt_report_growth"]
+    end
+
+    subgraph RF["Research & Positioning Family"]
+      R1["ohmymkt_research_brief"]
+      R2["ohmymkt_competitor_profile"]
+      R3["ohmymkt_save_positioning"]
+    end
+
+    subgraph AF["Asset & Publish Family"]
+      A1["ohmymkt_asset_manifest"]
+      A2["ohmymkt_generate_image"]
+      A3["ohmymkt_generate_video"]
+      A4["ohmymkt_publish"]
+      A5["ohmymkt_provider_config"]
+    end
+
+    PF --> ST[".ohmymkt state"]
+    GF --> ST
+    CF --> ST
+    SF --> ST
+    RF --> ST
+    AF --> ST
+```
+
+Tooling invariant:
+
+- all agent/skill `ohmymkt_*` tokens must resolve to registered tools (contract test enforced)
 
 ---
 
-## Runtime State Model
+## 6. Runtime State Objects
 
-`ohmymkt` runtime files are stored under `.ohmymkt/`.
+`ohmymkt` persists under `.ohmymkt/` with template-backed initialization.
 
-Typical state artifacts:
+Primary object groups:
 
-- plan snapshots
-- gates and check results
-- campaign lifecycle state
-- metrics and report material
-- content asset manifests
-
-State is shared across agent turns through tools, not manual prompt copying.
+- plans and active plan references
+- gates and gate decision history
+- campaign lifecycle status
+- metrics snapshots and derived reports
+- positioning and asset manifests
+- provider configuration pointers
 
 ---
 
-## Execution Loop
+## 7. Planning State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> Intake
+    Intake --> RequirementDraft: growth-manager
+    RequirementDraft --> GapClarification: requirements-analyst
+    GapClarification --> PlanDraft
+    PlanDraft --> ReviewerCheck: plan-reviewer
+    ReviewerCheck --> PlanDraft: rejected
+    ReviewerCheck --> Approved: approved
+    Approved --> [*]
+```
+
+Transition rule:
+
+- `PlanDraft -> Approved` only through `ReviewerCheck: approved`
+
+---
+
+## 8. Execution Orchestration Sequence
 
 ```mermaid
 sequenceDiagram
@@ -154,28 +227,82 @@ sequenceDiagram
     participant RA as requirements-analyst
     participant PR as plan-reviewer
     participant EM as execution-manager
-    participant DS as domain specialist(s)
-    participant RT as ohmymkt_* tools
+    participant DS as Specialist Agent
+    participant RT as ohmymkt_* Tool
+    participant ST as .ohmymkt State
 
     U->>GM: objective + constraints
-    GM->>RA: requirement extraction
-    RA-->>GM: scoped requirements + criteria
-    GM->>PR: plan review
-    PR-->>GM: approve/revise
-    GM->>EM: approved execution plan
-    EM->>DS: delegated domain tasks
-    DS->>RT: write/read state, run campaign tools
-    RT-->>EM: state + outputs
-    EM-->>U: progress + completion report
+    GM->>RA: extract requirements
+    RA-->>GM: requirements + acceptance criteria
+    GM->>PR: validate plan
+    PR-->>GM: approve/reject
+    alt rejected
+      GM->>RA: revise requirements/criteria
+      RA-->>GM: revised inputs
+      GM->>PR: re-review
+      PR-->>GM: approve
+    end
+    GM->>EM: approved plan + task graph
+    par specialist delegation
+      EM->>DS: domain task A
+      EM->>DS: domain task B
+      EM->>DS: domain task C
+    end
+    DS->>RT: execute runtime action
+    RT->>ST: persist state mutation
+    ST-->>EM: updated state
+    EM-->>U: cycle report + next actions
 ```
 
 ---
 
-## Guardrails
+## 9. Campaign Lifecycle State Machine
 
-- Planning never skips acceptance criteria.
-- Execution never bypasses state tools for critical updates.
-- Domain agents do not mutate orchestration strategy.
-- Ultrawork in marketing sessions never injects disabled legacy agents.
+```mermaid
+stateDiagram-v2
+    [*] --> Planned: plan_growth
+    Planned --> Gated: check_gates(pass)
+    Planned --> Planned: check_gates(fail) + update_gates
+    Gated --> Active: start_campaign
+    Active --> Active: run_cycle
+    Active --> IncidentOpen: incident(open)
+    IncidentOpen --> Mitigating: execution-manager reroute
+    Mitigating --> Active: incident(resolved)
+    Active --> Reporting: report_growth
+    Reporting --> Planned: next cycle planning
+```
 
-This is the minimum contract to keep output quality stable under autonomous execution.
+---
+
+## 10. Failure and Recovery Loop
+
+```mermaid
+flowchart TD
+    F["Failure Signal"] --> T{"Failure Type"}
+    T -->|plan ambiguity| P["route to requirements-analyst + plan-reviewer"]
+    T -->|gate failure| G["update_gates + re-check"]
+    T -->|execution blockage| E["execution-manager re-sequence"]
+    T -->|provider missing| V["provider_config + retry"]
+    T -->|incident| I["incident record + mitigation plan"]
+
+    P --> R["re-enter planning"]
+    G --> R
+    E --> X["resume cycle"]
+    V --> X
+    I --> X
+
+    R --> X
+    X --> O["report updated status"]
+```
+
+---
+
+## 11. Non-Negotiable Guardrails
+
+- planning must produce measurable acceptance criteria
+- plan approval must precede multi-domain execution
+- critical mutations must be written via runtime tools
+- marketing ultrawork must not inject disabled legacy agents
+- specialist outputs must feed back into shared state before reporting
+
+These constraints keep autonomous behavior deterministic enough for repeated campaign operation.

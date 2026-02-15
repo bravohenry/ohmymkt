@@ -14,6 +14,14 @@ Configuration resolution follows standard OpenCode order:
 
 For branding consistency, use `ohmymkt` naming in project docs and team conventions.
 
+```mermaid
+flowchart LR
+    P["Project config"] --> R["Config resolver"]
+    U["User config"] --> R
+    D["Defaults"] --> R
+    R --> E["Effective runtime config"]
+```
+
 ---
 
 ## Recommended Project Config (Marketing)
@@ -39,6 +47,16 @@ Example:
 }
 ```
 
+```mermaid
+flowchart TB
+    C["Config"] --> A1["default_run_agent=growth-manager"]
+    C --> A2["sisyphus_agent.disabled=true"]
+    C --> A3["disabled_agents includes legacy non-marketing agents"]
+    A1 --> E["marketing-first runtime"]
+    A2 --> E
+    A3 --> E
+```
+
 ---
 
 ## Agent Frontmatter Extensions
@@ -52,6 +70,19 @@ Project agents in `.claude/agents/*.md` support:
 
 Use these to keep execution behavior explicit at agent definition level.
 
+```mermaid
+flowchart LR
+    MD["agent markdown"] --> FM["frontmatter"]
+    FM --> M["mode"]
+    FM --> MDL["model"]
+    FM --> TMP["temperature"]
+    FM --> TLS["tools"]
+    M --> CFG["effective agent config"]
+    MDL --> CFG
+    TMP --> CFG
+    TLS --> CFG
+```
+
 ---
 
 ## Tool Gating
@@ -59,6 +90,13 @@ Use these to keep execution behavior explicit at agent definition level.
 Marketing tools are registered through the main tool registry.
 
 You can still control availability with `disabled_tools` using exact tool names (for example `ohmymkt_publish`).
+
+```mermaid
+flowchart TD
+    ALL["all registered tools"] --> F{"disabled_tools contains name?"}
+    F -->|yes| OFF["removed from runtime set"]
+    F -->|no| ON["available in runtime set"]
+```
 
 ---
 
@@ -70,12 +108,28 @@ External providers used by image/video/publish tools are configured via:
 
 This keeps secrets and provider routing out of agent prompt text.
 
+```mermaid
+flowchart LR
+    OP["operator config action"] --> PC["ohmymkt_provider_config"]
+    PC --> ST["provider state persisted"]
+    ST --> TL["generate_image / generate_video / publish tools"]
+```
+
 ---
 
 ## Runtime Directories
 
 - marketing runtime state: `.ohmymkt/`
 - planning/task artifacts: engine-managed state directories
+
+```mermaid
+flowchart TB
+    RT[".ohmymkt/"] --> P["plans"]
+    RT --> G["gates"]
+    RT --> C["campaign state"]
+    RT --> M["metrics/report artifacts"]
+    RT --> A["asset manifests"]
+```
 
 ---
 

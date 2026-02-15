@@ -17,9 +17,23 @@ This page summarizes the marketing-focused feature set.
   - `content-writer`
   - `growth-analyst`
   - `research-agent`
-  - `seo-engineer`
+- `seo-engineer`
 
 This replaces generic coding orchestration with marketing orchestration while keeping upstream OpenCode engine hooks/tooling.
+
+```mermaid
+flowchart TB
+    GM["growth-manager"] --> RA["requirements-analyst"]
+    GM --> PR["plan-reviewer"]
+    GM --> EM["execution-manager"]
+
+    EM --> AEO["aeo-specialist"]
+    EM --> CO["content-ops"]
+    EM --> CW["content-writer"]
+    EM --> GA["growth-analyst"]
+    EM --> RE["research-agent"]
+    EM --> SEO["seo-engineer"]
+```
 
 ---
 
@@ -46,6 +60,13 @@ This replaces generic coding orchestration with marketing orchestration while ke
 17. `ohmymkt_publish`
 18. `ohmymkt_competitor_profile`
 
+```mermaid
+flowchart LR
+    IDX["createOhmymktTools()"] --> REG["tool-registry allTools merge"]
+    REG --> FIL["filterDisabledTools"]
+    FIL --> RUN["Runtime callable toolset"]
+```
+
 ---
 
 ## 3. State and Templates
@@ -59,6 +80,13 @@ Template files live under `src/tools/ohmymkt/templates/`:
 - `modules.template.json`
 - `task-pool-40.json`
 
+```mermaid
+flowchart TB
+    TMP["templates/*.json"] --> INIT["runtime initializer"]
+    INIT --> STATE[".ohmymkt/*"]
+    STATE --> CYCLE["plan/gate/cycle/report updates"]
+```
+
 ---
 
 ## 4. Ultrawork (Marketing Route)
@@ -68,6 +96,14 @@ Keyword trigger: `ultrawork` / `ulw`
 When a marketing primary/planning agent is active, ultrawork uses the marketing injection template and marketing delegation path.
 
 It intentionally avoids legacy non-marketing delegation instructions.
+
+```mermaid
+flowchart TD
+    K["Keyword detected"] --> S["source-detector"]
+    S -->|marketing agents| M["marketing ultrawork template"]
+    S -->|others| O["non-marketing templates"]
+    M --> P["planning + execution-manager path"]
+```
 
 ---
 
@@ -85,6 +121,14 @@ Loader rules:
   - `temperature`
   - `tools`
 
+```mermaid
+flowchart LR
+    F[".claude/agents/*.md"] --> V{"is markdown and not AGENTS/README?"}
+    V -->|yes| FM["frontmatter parser"]
+    V -->|no| SKIP["skip"]
+    FM --> OUT["agent definitions in runtime"]
+```
+
 ---
 
 ## 6. Skill Integration
@@ -92,6 +136,13 @@ Loader rules:
 Project skills in `.opencode/skills/` can call `ohmymkt_*` tools directly.
 
 Contract test ensures all `ohmymkt_*` tokens referenced by agents/skills exist in the registered toolset.
+
+```mermaid
+flowchart LR
+    SK["skills + agents token scan"] --> CT["contract.test.ts"]
+    CT -->|all tokens registered| PASS["pass"]
+    CT -->|missing token| FAIL["fail build/test gate"]
+```
 
 ---
 

@@ -1,122 +1,198 @@
 # ohmymkt Orchestration Guide
 
-Practical guide for running marketing work with the `growth-manager` topology.
+Operator runbook for marketing execution with the `growth-manager` topology.
 
 ---
 
-## Quick Decision Matrix
+## 1. Decision Entry
 
-| Situation | Recommended Path | Why |
-|---|---|---|
-| Quick execution with clear goal | `ultrawork` / `ulw` | Fast autonomous routing |
-| High-stakes launch or budget impact | Planned mode (`growth-manager` -> review -> execute) | Stronger validation |
-| Ongoing campaign iteration | Start from `ohmymkt_report_growth` and `ohmymkt_run_cycle` | State-aware loop |
-| Incident handling | `ohmymkt_incident` + execution-manager follow-up | Controlled recovery |
+```mermaid
+flowchart TD
+    S["Start"] --> D1{"Task impact high?<br/>(budget, launch date, revenue)"}
+    D1 -->|No| D2{"Need fast autonomous execution?"}
+    D1 -->|Yes| PL["Planned Mode"]
 
----
+    D2 -->|Yes| UW["Ultrawork Mode (ulw)"]
+    D2 -->|No| PL
 
-## Canonical Flow
-
-1. Input objective and constraints.
-2. `growth-manager` forms initial plan.
-3. `requirements-analyst` clarifies requirements.
-4. `plan-reviewer` approves/rejects plan.
-5. `execution-manager` dispatches specialists.
-6. `ohmymkt_*` tools persist plan/gates/cycle/metrics.
-7. Return report and next-cycle recommendations.
+    UW --> E["execution-manager path"]
+    PL --> P["requirements + review gate"]
+    P --> E
+    E --> R["report + next-cycle actions"]
+```
 
 ---
 
-## Ultrawork Flow
+## 2. Mode Comparison
 
-Use keyword:
+| Mode | Trigger | Planning Strictness | Best For | Risk Level |
+|---|---|---|---|---|
+| Ultrawork | `ultrawork` / `ulw` keyword | medium-to-high (template-driven) | fast iteration, broad discovery | medium |
+| Planned | explicit planning/review sequence | highest | launches, paid channels, high-cost execution | low |
+
+---
+
+## 3. Canonical Execution Path
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant GM as growth-manager
+    participant RA as requirements-analyst
+    participant PR as plan-reviewer
+    participant EM as execution-manager
+    participant SP as specialist agents
+    participant TO as ohmymkt_* tools
+
+    U->>GM: objective + constraints
+    GM->>RA: clarify requirements
+    RA-->>GM: acceptance criteria
+    GM->>PR: review plan quality
+    PR-->>GM: approve/reject
+    alt rejected
+      GM->>RA: revise scope/criteria
+      RA-->>GM: revised package
+      GM->>PR: re-review
+      PR-->>GM: approve
+    end
+    GM->>EM: approved execution packet
+    EM->>SP: delegate domain tasks
+    SP->>TO: stateful operations
+    TO-->>EM: state + outputs
+    EM-->>U: progress + report + next actions
+```
+
+---
+
+## 4. Ultrawork Path Internals
+
+Use prompt:
 
 ```text
 ulw build a 30-day demand-gen pipeline for our B2B SaaS
 ```
 
-Expected behavior:
+Router behavior:
 
-- marketing ultrawork source is selected
-- planning + review pass runs before heavy execution
-- execution is delegated by domain
-- runtime state is written under `.ohmymkt/`
+```mermaid
+flowchart LR
+    I["Prompt"] --> K{"contains ulw/ultrawork?"}
+    K -->|No| N["normal route"]
+    K -->|Yes| SR["source-detector"]
+    SR -->|marketing agents| MT["marketing template"]
+    SR -->|other agents| OT["other template branches"]
+    MT --> GM["growth-manager flow"]
+```
 
----
+Guarantee:
 
-## Planned Flow (Recommended for Critical Work)
-
-Use this mode when you need strict approval points.
-
-1. Ask `growth-manager` to draft plan.
-2. Ask `requirements-analyst` to expose assumptions and missing inputs.
-3. Ask `plan-reviewer` to verify acceptance criteria and risks.
-4. Approve plan.
-5. Trigger execution through `execution-manager`.
-
-Checklist before execution:
-
-- objective is measurable
-- channel scope is explicit
-- budget/time constraints are explicit
-- success criteria are testable
-- fallback/incident path exists
+- marketing ultrawork branch does not inject disabled legacy agents
 
 ---
 
-## Delegation Matrix
+## 5. Planned Mode Checklist
 
-| Work Type | Primary Specialist | Typical Tools |
-|---|---|---|
-| Market/competitor discovery | `research-agent` | `ohmymkt_research_brief`, `ohmymkt_competitor_profile` |
-| Positioning and message | `content-writer` + `growth-analyst` | `ohmymkt_save_positioning` |
-| SEO/AEO implementation | `seo-engineer` + `aeo-specialist` | `ohmymkt_check_gates`, `ohmymkt_update_gates` |
-| Campaign launch and cadence | `content-ops` | `ohmymkt_start_campaign`, `ohmymkt_run_cycle` |
-| Reporting and iteration | `growth-analyst` | `ohmymkt_report_growth`, `ohmymkt_update_metrics` |
-| Asset and publishing | `content-writer` + `content-ops` | `ohmymkt_asset_manifest`, `ohmymkt_generate_image`, `ohmymkt_generate_video`, `ohmymkt_publish` |
+Before dispatching execution, confirm all of the following:
 
----
+1. objective has measurable outcome
+2. channels and boundaries are explicit
+3. timeline and budget are explicit
+4. acceptance criteria are testable
+5. rollback/incident route exists
+6. owner is assigned per deliverable
 
-## Failure and Recovery
-
-### Plan quality issue
-
-- Route back to `plan-reviewer`
-- Patch acceptance criteria and ownership
-- re-approve before resuming execution
-
-### Campaign incident
-
-- run `ohmymkt_incident`
-- capture severity/impact/status
-- re-sequence execution through `execution-manager`
-
-### Missing provider config
-
-- run `ohmymkt_provider_config`
-- retry failed generation/publish step
+If any item fails, send back to `requirements-analyst` and `plan-reviewer`.
 
 ---
 
-## What Not to Do
+## 6. Delegation Matrix
 
-- Do not bypass planning for high-stakes launches.
-- Do not let specialists self-orchestrate cross-domain execution.
-- Do not store critical state only in chat text.
-- Do not use non-marketing ultrawork prompts in marketing sessions.
+| Workstream | Primary Specialist | Supporting Specialist | Typical Tools |
+|---|---|---|---|
+| Market discovery | `research-agent` | `growth-analyst` | `ohmymkt_research_brief`, `ohmymkt_competitor_profile` |
+| Positioning | `content-writer` | `growth-analyst` | `ohmymkt_save_positioning` |
+| AEO/SEO implementation | `seo-engineer` | `aeo-specialist` | `ohmymkt_check_gates`, `ohmymkt_update_gates` |
+| Campaign operations | `content-ops` | `growth-manager` | `ohmymkt_start_campaign`, `ohmymkt_run_cycle` |
+| Performance loop | `growth-analyst` | `execution-manager` | `ohmymkt_update_metrics`, `ohmymkt_report_growth` |
+| Asset + distribution | `content-writer` | `content-ops` | `ohmymkt_asset_manifest`, `ohmymkt_generate_image`, `ohmymkt_generate_video`, `ohmymkt_publish` |
 
 ---
 
-## Validation Commands
+## 7. Incident Runbook
+
+```mermaid
+flowchart TD
+    X["Incident detected"] --> I1["ohmymkt_incident (open)"]
+    I1 --> I2{"Severity"}
+    I2 -->|high| H["pause risky tasks"]
+    I2 -->|medium/low| M["continue guarded tasks"]
+    H --> R1["execution-manager resequence"]
+    M --> R1
+    R1 --> R2["mitigation actions by specialists"]
+    R2 --> I3["ohmymkt_incident (resolved/update)"]
+    I3 --> I4["ohmymkt_run_cycle"]
+    I4 --> I5["ohmymkt_report_growth"]
+```
+
+---
+
+## 8. Provider Failure Runbook
+
+```mermaid
+sequenceDiagram
+    participant EM as execution-manager
+    participant T as generation/publish tool
+    participant P as ohmymkt_provider_config
+
+    EM->>T: generate/publish request
+    T-->>EM: provider missing/misconfigured
+    EM->>P: set/update provider config
+    P-->>EM: config persisted
+    EM->>T: retry request
+    T-->>EM: success/fail result
+```
+
+Escalation rule:
+
+- retry once after configuration fix
+- if still failing, continue cycle without blocked channel and surface incident
+
+---
+
+## 9. Weekly Cycle Timeline
+
+```mermaid
+flowchart LR
+    W0["Week Start"] --> P["plan_growth / list_plans"]
+    P --> G["check_gates"]
+    G --> C["start_campaign / run_cycle"]
+    C --> A["asset + publish operations"]
+    A --> M["update_metrics"]
+    M --> R["report_growth"]
+    R --> N["next cycle priorities"]
+    N --> W0
+```
+
+---
+
+## 10. Anti-Patterns
+
+- bypassing review gates for high-cost launches
+- letting specialists self-orchestrate cross-domain sequencing
+- keeping campaign truth only in chat text (no runtime state write)
+- mixing non-marketing ultrawork templates into marketing sessions
+
+---
+
+## 11. Validation Commands
 
 ```bash
-# Type safety
+# build safety
 bun run typecheck
-
-# Build
 bun run build
 
-# Focused tests for marketing chain
+# marketing contract checks
+bun test src/features/claude-code-agent-loader/loader.test.ts
 bun test src/tools/ohmymkt/tools.test.ts
 bun test src/tools/ohmymkt/contract.test.ts
 bun test src/hooks/keyword-detector/ultrawork/source-detector.test.ts
@@ -124,7 +200,7 @@ bun test src/hooks/keyword-detector/ultrawork/source-detector.test.ts
 
 ---
 
-## Reference
+## 12. References
 
 - `docs/guide/overview.md`
 - `docs/guide/understanding-orchestration-system.md`

@@ -1,5 +1,5 @@
 # .claude/
-> L2 | 父级: /Users/henry/PARA/[01] Projects/Vibe/ohmymkt/oh-my-opencode-fork/AGENTS.md
+> L2 | 父级: /Users/henry/PARA/[01] Projects/Vibe/ohmymkt/ohmymkt/AGENTS.md
 
 成员清单
 agents/ - 项目级自定义 Agent 目录（营销主 Agent + 规划层 + 执行层 + 领域层）

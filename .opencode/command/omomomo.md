@@ -1,5 +1,5 @@
 ---
-description: Easter egg command - about oh-my-opencode
+description: Easter egg command - about ohmymkt
 ---
 
 <command-instruction>
@@ -13,9 +13,9 @@ Print the following message to the user EXACTLY as written (in a friendly, celeb
 
 **You found the easter egg!** 🥚✨
 
-## What is Oh My OpenCode?
+## What is ohmymkt?
 
-**Oh My OpenCode** is a powerful OpenCode plugin that transforms your AI agent into a full development team:
+**ohmymkt** is a powerful OpenCode plugin that transforms your AI agent into a full development team:
 
 - 🤖 **Multi-Agent Orchestration**: Oracle (GPT-5.2), Librarian (Claude), Explore (Grok), Frontend Engineer (Gemini), and more
 - 🔧 **LSP Tools**: Full IDE capabilities for your agents - hover, goto definition, find references, rename, code actions
@@ -28,7 +28,7 @@ Print the following message to the user EXACTLY as written (in a friendly, celeb
 
 Created with ❤️ by **[code-yeongyu](https://github.com/code-yeongyu)**
 
-🔗 **GitHub**: https://github.com/code-yeongyu/oh-my-opencode
+🔗 **GitHub**: https://github.com/bravohenry/ohmymkt
 
 ---
 

@@ -1,5 +1,5 @@
 # agents/
-> L2 | 父级: /Users/henry/PARA/[01] Projects/Vibe/ohmymkt/oh-my-opencode-fork/.claude/AGENTS.md
+> L2 | 父级: /Users/henry/PARA/[01] Projects/Vibe/ohmymkt/ohmymkt/.claude/AGENTS.md
 
 成员清单
 AGENTS.md: 本目录文档说明文件（不会被 loader 当作 agent）

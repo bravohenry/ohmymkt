@@ -1,10 +1,10 @@
-# oh-my-opencode-fork/
+# ohmymkt/
 > L2 | 父级: /Users/henry/PARA/[01] Projects/Vibe/ohmymkt/AGENTS.md
 
 目录结构
 .claude/agents/ - 项目级营销 Agent 拓扑（主 Agent + 规划层 + 执行层 + 领域层）
 .opencode/skills/ - 项目级营销技能集合（由 OMO skill-loader 原生加载）
-.opencode/oh-my-opencode.json - 运行配置（`default_run_agent=growth-manager`，禁用非营销 Agent）
+.opencode/ohmymkt.json - 运行配置（`default_run_agent=growth-manager`，禁用非营销 Agent）
 src/tools/ohmymkt/ - OMO 原生营销工具命名空间（18 个 `ohmymkt_*` 工具 + runtime + templates）
 src/hooks/keyword-detector/ultrawork/ - ultrawork 注入路由（新增 marketing 分支）
 src/features/ - 上游主干功能模块（保留 OMO 原骨架）

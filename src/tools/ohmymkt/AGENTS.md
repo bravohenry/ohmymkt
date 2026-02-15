@@ -1,5 +1,5 @@
 # ohmymkt/
-> L2 | 父级: /Users/henry/PARA/[01] Projects/Vibe/ohmymkt/oh-my-opencode-fork/src/tools/AGENTS.md
+> L2 | 父级: /Users/henry/PARA/[01] Projects/Vibe/ohmymkt/ohmymkt/src/tools/AGENTS.md
 
 成员清单
 index.ts: `createOhmymktTools()` 聚合入口，输出 18 个 `ohmymkt_*` 工具

@@ -1,5 +1,5 @@
 # runtime/
-> L2 | 父级: /Users/henry/PARA/[01] Projects/Vibe/ohmymkt/oh-my-opencode-fork/src/tools/ohmymkt/AGENTS.md
+> L2 | 父级: /Users/henry/PARA/[01] Projects/Vibe/ohmymkt/ohmymkt/src/tools/ohmymkt/AGENTS.md
 
 成员清单
 constants.ts: `.ohmymkt/` 运行时路径与模板路径

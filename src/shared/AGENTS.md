@@ -7,7 +7,7 @@
 ## STRUCTURE
 ```
 shared/
-├── logger.ts                  # File logging (/tmp/oh-my-opencode.log) — 62 imports
+├── logger.ts                  # Shared file logger for runtime diagnostics — 62 imports
 ├── dynamic-truncator.ts       # Token-aware context window management (201 lines)
 ├── model-resolver.ts          # 3-step resolution (Override → Fallback → Default)
 ├── model-availability.ts      # Provider model fetching & fuzzy matching (358 lines)

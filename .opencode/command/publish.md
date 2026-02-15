@@ -1,10 +1,10 @@
 ---
-description: Publish oh-my-opencode to npm via GitHub Actions workflow
+description: Publish ohmymkt to npm via GitHub Actions workflow
 argument-hint: <patch|minor|major>
 ---
 
 <command-instruction>
-You are the release manager for oh-my-opencode. Execute the FULL publish workflow from start to finish.
+You are the release manager for ohmymkt. Execute the FULL publish workflow from start to finish.
 
 ## CRITICAL: ARGUMENT REQUIREMENT
 
@@ -214,7 +214,7 @@ gh release edit "v${NEW_VERSION}" --notes-file /tmp/release-notes-v${NEW_VERSION
 
 Poll npm registry until the new version appears:
 ```bash
-npm view oh-my-opencode version
+npm view ohmymkt version
 ```
 
 Compare with expected version. If not matching after 2 minutes, warn user about npm propagation delay.
@@ -251,7 +251,7 @@ After publish-platform workflow completes, verify all 7 platform packages are pu
 ```bash
 PLATFORMS="darwin-arm64 darwin-x64 linux-x64 linux-arm64 linux-x64-musl linux-arm64-musl windows-x64"
 for PLATFORM in $PLATFORMS; do
-  npm view "oh-my-opencode-${PLATFORM}" version
+  npm view "ohmymkt-${PLATFORM}" version
 done
 ```
 
@@ -260,13 +260,13 @@ All 7 packages should show the same version as the main package (`${NEW_VERSION}
 **Expected packages:**
 | Package | Description |
 |---------|-------------|
-| `oh-my-opencode-darwin-arm64` | macOS Apple Silicon |
-| `oh-my-opencode-darwin-x64` | macOS Intel |
-| `oh-my-opencode-linux-x64` | Linux x64 (glibc) |
-| `oh-my-opencode-linux-arm64` | Linux ARM64 (glibc) |
-| `oh-my-opencode-linux-x64-musl` | Linux x64 (musl/Alpine) |
-| `oh-my-opencode-linux-arm64-musl` | Linux ARM64 (musl/Alpine) |
-| `oh-my-opencode-windows-x64` | Windows x64 |
+| `ohmymkt-darwin-arm64` | macOS Apple Silicon |
+| `ohmymkt-darwin-x64` | macOS Intel |
+| `ohmymkt-linux-x64` | Linux x64 (glibc) |
+| `ohmymkt-linux-arm64` | Linux ARM64 (glibc) |
+| `ohmymkt-linux-x64-musl` | Linux x64 (musl/Alpine) |
+| `ohmymkt-linux-arm64-musl` | Linux ARM64 (musl/Alpine) |
+| `ohmymkt-windows-x64` | Windows x64 |
 
 If any platform package version doesn't match, warn the user and suggest checking the publish-platform workflow logs.
 
@@ -276,8 +276,8 @@ If any platform package version doesn't match, warn the user and suggest checkin
 
 Report success to user with:
 - New version number
-- GitHub release URL: https://github.com/code-yeongyu/oh-my-opencode/releases/tag/v{version}
-- npm package URL: https://www.npmjs.com/package/oh-my-opencode
+- GitHub release URL: https://github.com/bravohenry/ohmymkt/releases/tag/v{version}
+- npm package URL: https://www.npmjs.com/package/ohmymkt
 - Platform packages status: List all 7 platform packages with their versions
 
 ---
@@ -299,7 +299,7 @@ Respond to user in English.
 
 <current-context>
 <published-version>
-!`npm view oh-my-opencode version 2>/dev/null || echo "not published"`
+!`npm view ohmymkt version 2>/dev/null || echo "not published"`
 </published-version>
 <local-version>
 !`node -p "require('./package.json').version" 2>/dev/null || echo "unknown"`
@@ -308,6 +308,6 @@ Respond to user in English.
 !`git status --porcelain`
 </git-status>
 <recent-commits>
-!`npm view oh-my-opencode version 2>/dev/null | xargs -I{} git log "v{}"..HEAD --oneline 2>/dev/null | head -15 || echo "no commits"`
+!`npm view ohmymkt version 2>/dev/null | xargs -I{} git log "v{}"..HEAD --oneline 2>/dev/null | head -15 || echo "no commits"`
 </recent-commits>
 </current-context>

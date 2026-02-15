@@ -1,94 +1,43 @@
-# Task System
+# ohmymkt Task System
 
-Oh My OpenCode's Task system provides structured task management with dependency tracking and parallel execution optimization.
+`ohmymkt` task flow tracks marketing execution as a stateful cycle.
 
-## Note on Claude Code Alignment
+---
 
-This implementation follows Claude Code's internal Task tool signatures (`TaskCreate`, `TaskUpdate`, `TaskList`, `TaskGet`) and field naming conventions (`subject`, `blockedBy`, `blocks`, etc.).
+## Task Levels
 
-**However, Anthropic has not published official documentation for these tools.** The Task tools exist in Claude Code but are not documented on `docs.anthropic.com` or `code.claude.com`.
+1. Plan tasks: objective, scope, acceptance criteria
+2. Gate tasks: readiness and risk checks
+3. Execution tasks: specialist-owned deliverables
+4. Reporting tasks: metrics, findings, next actions
 
-This is **Oh My OpenCode's own implementation** based on observed Claude Code behavior and internal specifications.
+---
 
-## Tools
+## State-Aware Tasks
 
-| Tool | Purpose |
-|------|---------|
-| `TaskCreate` | Create a task with auto-generated ID (`T-{uuid}`) |
-| `TaskGet` | Retrieve full task details by ID |
-| `TaskList` | List active tasks with unresolved blockers |
-| `TaskUpdate` | Update status, dependencies, or metadata |
+Tasks are persisted through `ohmymkt_*` tools under `.ohmymkt/`.
 
-## Task Schema
+Core task lifecycle:
 
-```ts
-interface Task {
-  id: string              // T-{uuid}
-  subject: string         // Imperative: "Run tests"
-  description: string
-  status: "pending" | "in_progress" | "completed" | "deleted"
-  activeForm?: string     // Present continuous: "Running tests"
-  blocks: string[]        // Tasks this blocks
-  blockedBy: string[]     // Tasks blocking this
-  owner?: string          // Agent name
-  metadata?: Record<string, unknown>
-  threadID: string        // Session ID (auto-set)
-}
-```
+1. create/refresh plan (`ohmymkt_plan_growth`)
+2. validate readiness (`ohmymkt_check_gates`)
+3. launch/iterate cycle (`ohmymkt_start_campaign`, `ohmymkt_run_cycle`)
+4. capture report (`ohmymkt_report_growth`)
 
-## Dependencies and Parallel Execution
+---
 
-```
-[Build Frontend]    ──┐
-                      ├──→ [Integration Tests] ──→ [Deploy]
-[Build Backend]     ──┘
-```
+## Incident Tasks
 
-- Tasks with empty `blockedBy` run in parallel
-- Dependent tasks wait until blockers complete
+When incidents happen:
 
-## Example Workflow
+1. create incident record (`ohmymkt_incident`)
+2. re-prioritize with `execution-manager`
+3. re-run cycle with updated constraints
 
-```ts
-TaskCreate({ subject: "Build frontend" })                    // T-001
-TaskCreate({ subject: "Build backend" })                     // T-002
-TaskCreate({ subject: "Run integration tests",
-             blockedBy: ["T-001", "T-002"] })                 // T-003
-```
+---
 
-```ts
-TaskList()
-// T-001 [pending] Build frontend        blockedBy: []
-// T-002 [pending] Build backend         blockedBy: []
-// T-003 [pending] Integration tests     blockedBy: [T-001, T-002]
-```
+## Task Quality Rules
 
-```ts
-TaskUpdate({ id: "T-001", status: "completed" })
-TaskUpdate({ id: "T-002", status: "completed" })
-// T-003 now unblocked
-```
-
-## Storage
-
-Tasks are stored as JSON files:
-
-```
-.sisyphus/tasks/
-```
-
-## Difference from TodoWrite
-
-| Feature | TodoWrite | Task System |
-|---------|-----------|-------------|
-| Storage | Session memory | File system |
-| Persistence | Lost on close | Survives restart |
-| Dependencies | None | Full support (`blockedBy`) |
-| Parallel execution | Manual | Automatic optimization |
-
-## When to Use
-
-Use Tasks when:
-- Work has multiple steps with dependencies
-- Multiple subagents will collaborate
-- Progress should persist across sessions
+- every task has owner
+- every task has measurable completion condition
+- every critical task updates runtime state

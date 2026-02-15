@@ -1,5 +1,5 @@
 # templates/
-> L2 | 父级: /Users/henry/PARA/[01] Projects/Vibe/ohmymkt/oh-my-opencode-fork/src/tools/ohmymkt/AGENTS.md
+> L2 | 父级: /Users/henry/PARA/[01] Projects/Vibe/ohmymkt/ohmymkt/src/tools/ohmymkt/AGENTS.md
 
 成员清单
 gates.template.json: 启动门禁初始状态模板

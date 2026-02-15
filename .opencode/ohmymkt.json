@@ -1,0 +1,21 @@
+{
+  "sisyphus_agent": {
+    "disabled": true
+  },
+  "disabled_agents": [
+    "sisyphus",
+    "hephaestus",
+    "oracle",
+    "librarian",
+    "explore",
+    "multimodal-looker",
+    "metis",
+    "momus",
+    "atlas"
+  ],
+  "default_run_agent": "growth-manager",
+  "claude_code": {
+    "agents": true,
+    "skills": true
+  }
+}

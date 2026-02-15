@@ -1,5 +1,5 @@
 # features/
-> L2 | 父级: /Users/henry/PARA/[01] Projects/Vibe/ohmymkt/oh-my-opencode-fork/AGENTS.md
+> L2 | 父级: /Users/henry/PARA/[01] Projects/Vibe/ohmymkt/ohmymkt/AGENTS.md
 
 成员清单（本次相关）
 claude-code-agent-loader/loader.ts: 项目/用户 Agent 装载；支持 `mode/model/temperature/tools` frontmatter 扩展

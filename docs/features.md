@@ -1,153 +1,316 @@
 # ohmymkt Features
 
-This page summarizes the marketing-focused feature set.
-
 ---
 
-## 1. Agent Topology
+## Agents: Your Marketing AI Team
 
-`ohmymkt` uses a layered marketing topology:
+`ohmymkt` runs a layered marketing topology on top of the upstream OpenCode engine.
 
-- Primary: `growth-manager`
-- Planning: `requirements-analyst`, `plan-reviewer`
-- Execution: `execution-manager`
-- Domain specialists:
-  - `aeo-specialist`
-  - `content-ops`
-  - `content-writer`
-  - `growth-analyst`
-  - `research-agent`
-- `seo-engineer`
+### Core Marketing Agents
 
-This replaces generic coding orchestration with marketing orchestration while keeping upstream OpenCode engine hooks/tooling.
+| Agent | Role | Primary Responsibility |
+|---|---|---|
+| `growth-manager` | Primary | Owns objective framing, sequencing, and final execution decisions |
+| `execution-manager` | Execution hub | Dispatches domain specialists and controls cycle cadence |
+| `requirements-analyst` | Planning | Converts intent to explicit requirements + acceptance criteria |
+| `plan-reviewer` | Planning gate | Rejects unclear plans and enforces verifiability |
+
+### Domain Specialists
+
+| Agent | Domain |
+|---|---|
+| `aeo-specialist` | Answer-engine optimization and retrieval-facing structures |
+| `content-ops` | Editorial operations and publishing cadence |
+| `content-writer` | Copy + asset generation briefs |
+| `growth-analyst` | Metrics diagnosis and iteration strategy |
+| `research-agent` | Market/competitor intelligence |
+| `seo-engineer` | Technical SEO, structure, schema |
+
+### Architecture Map
 
 ```mermaid
 flowchart TB
-    GM["growth-manager"] --> RA["requirements-analyst"]
-    GM --> PR["plan-reviewer"]
+    U["User"] --> GM["growth-manager"]
+
+    subgraph PL["Planning Layer"]
+      GM --> RA["requirements-analyst"]
+      GM --> PR["plan-reviewer"]
+      RA --> GM
+      PR --> GM
+    end
+
     GM --> EM["execution-manager"]
 
-    EM --> AEO["aeo-specialist"]
-    EM --> CO["content-ops"]
-    EM --> CW["content-writer"]
-    EM --> GA["growth-analyst"]
-    EM --> RE["research-agent"]
-    EM --> SEO["seo-engineer"]
+    subgraph DL["Domain Layer"]
+      EM --> AEO["aeo-specialist"]
+      EM --> CO["content-ops"]
+      EM --> CW["content-writer"]
+      EM --> GA["growth-analyst"]
+      EM --> RE["research-agent"]
+      EM --> SEO["seo-engineer"]
+    end
+
+    DL --> TOOLS["ohmymkt_* tools"]
+    TOOLS --> STATE[".ohmymkt/"]
 ```
+
+### Invoking Agents Explicitly
+
+The primary flow auto-routes delegation, but explicit requests work well for constrained tasks:
+
+```text
+Ask @requirements-analyst to list missing requirements before launch
+Ask @plan-reviewer to reject any non-measurable deliverables
+Ask @execution-manager to sequence specialists for a 2-week cycle
+Ask @growth-analyst to diagnose why week-2 CTR dropped
+```
+
+### Tool Boundary Principle
+
+- planning agents must not bypass acceptance criteria
+- domain specialists should not redefine orchestration policy
+- critical state changes should be persisted via `ohmymkt_*` tools
 
 ---
 
-## 2. Marketing Runtime Tools
+## Marketing Runtime Tools
 
-18 native runtime tools are registered via `src/tools/ohmymkt/index.ts`:
+18 native tools are registered under `src/tools/ohmymkt/`.
 
-1. `ohmymkt_plan_growth`
-2. `ohmymkt_check_gates`
-3. `ohmymkt_start_campaign`
-4. `ohmymkt_run_cycle`
-5. `ohmymkt_incident`
-6. `ohmymkt_report_growth`
-7. `ohmymkt_list_plans`
-8. `ohmymkt_update_gates`
-9. `ohmymkt_update_metrics`
-10. `ohmymkt_read_state`
-11. `ohmymkt_research_brief`
-12. `ohmymkt_save_positioning`
-13. `ohmymkt_asset_manifest`
-14. `ohmymkt_provider_config`
-15. `ohmymkt_generate_image`
-16. `ohmymkt_generate_video`
-17. `ohmymkt_publish`
-18. `ohmymkt_competitor_profile`
+### Tool Registry Integration
 
 ```mermaid
 flowchart LR
-    IDX["createOhmymktTools()"] --> REG["tool-registry allTools merge"]
-    REG --> FIL["filterDisabledTools"]
+    AG["Agents / Skills"] --> REG["createOhmymktTools()"]
+    REG --> TR["plugin tool-registry merge"]
+    TR --> FIL["filterDisabledTools"]
     FIL --> RUN["Runtime callable toolset"]
 ```
 
----
+### Tool Families
 
-## 3. State and Templates
+| Family | Tools |
+|---|---|
+| Plan & Gate | `ohmymkt_plan_growth`, `ohmymkt_check_gates`, `ohmymkt_update_gates`, `ohmymkt_list_plans` |
+| Campaign & Incident | `ohmymkt_start_campaign`, `ohmymkt_run_cycle`, `ohmymkt_incident` |
+| State & Reporting | `ohmymkt_read_state`, `ohmymkt_update_metrics`, `ohmymkt_report_growth` |
+| Research & Positioning | `ohmymkt_research_brief`, `ohmymkt_competitor_profile`, `ohmymkt_save_positioning` |
+| Assets & Publish | `ohmymkt_asset_manifest`, `ohmymkt_generate_image`, `ohmymkt_generate_video`, `ohmymkt_publish`, `ohmymkt_provider_config` |
 
-Runtime state is stored in `.ohmymkt/`.
+### Runtime State Path
 
-Template files live under `src/tools/ohmymkt/templates/`:
-
-- `gates.template.json`
-- `metrics.template.json`
-- `modules.template.json`
-- `task-pool-40.json`
+- state root: `.ohmymkt/`
+- templates: `src/tools/ohmymkt/templates/`
 
 ```mermaid
 flowchart TB
-    TMP["templates/*.json"] --> INIT["runtime initializer"]
-    INIT --> STATE[".ohmymkt/*"]
-    STATE --> CYCLE["plan/gate/cycle/report updates"]
+    TMP["templates/*.json"] --> INIT["runtime initialization"]
+    INIT --> RUNTIME[".ohmymkt/*"]
+    RUNTIME --> CYCLE["plan/gate/campaign/report updates"]
 ```
 
 ---
 
-## 4. Ultrawork (Marketing Route)
+## Skills: Specialized Workflows
 
-Keyword trigger: `ultrawork` / `ulw`
+Skills provide reusable, domain-specific operating procedures.
 
-When a marketing primary/planning agent is active, ultrawork uses the marketing injection template and marketing delegation path.
+### Project Skill Sources
 
-It intentionally avoids legacy non-marketing delegation instructions.
+| Scope | Path |
+|---|---|
+| Project | `.opencode/skills/*/SKILL.md` |
+| User | `~/.config/opencode/skills/*/SKILL.md` |
+| Claude compatibility (project) | `.claude/skills/*/SKILL.md` |
+| Claude compatibility (user) | `~/.claude/skills/*/SKILL.md` |
 
-```mermaid
-flowchart TD
-    K["Keyword detected"] --> S["source-detector"]
-    S -->|marketing agents| M["marketing ultrawork template"]
-    S -->|others| O["non-marketing templates"]
-    M --> P["planning + execution-manager path"]
-```
+### Marketing Skill Clusters
+
+| Cluster | Typical Skills |
+|---|---|
+| Strategy | `content-strategy`, `marketing-ideas`, `pricing-strategy`, `launch-strategy` |
+| Research | `competitor-alternatives`, `marketing-psychology`, `seo-audit` |
+| Content Production | `copywriting`, `copy-editing`, `social-content`, `email-sequence` |
+| Conversion | `page-cro`, `signup-flow-cro`, `onboarding-cro`, `paywall-upgrade-cro`, `popup-cro`, `form-cro` |
+| Distribution | `paid-ads`, `schema-markup`, `programmatic-seo`, `referral-program` |
+
+### Built-in System Skills (Upstream Compatibility)
+
+`ohmymkt` keeps upstream built-in skill mechanics:
+
+- `playwright` / browser automation
+- `frontend-ui-ux`
+- `git-master`
+
+Disable built-ins via `disabled_skills` in config.
 
 ---
 
-## 5. Agent Loader Behavior
+## Commands: Slash Workflows
 
-Project agents are loaded from `.claude/agents/*.md`.
+`ohmymkt` keeps the upstream slash-command infrastructure and project command templates.
 
-Loader rules:
+### Common Built-in Commands
 
-- accepts markdown agent files
-- ignores `AGENTS.md` and `README.md`
-- parses frontmatter extensions:
-  - `mode: primary|subagent`
-  - `model`
-  - `temperature`
-  - `tools`
+| Command | Purpose |
+|---|---|
+| `/init-deep` | initialize hierarchical AGENTS context |
+| `/ralph-loop` | iterative autonomous loop |
+| `/ulw-loop` | ultrawork loop variant |
+| `/cancel-ralph` | cancel active loop |
+| `/refactor` | structured refactoring workflow |
+| `/start-work` | start planned execution workflow |
+
+### Project Command Templates
+
+Additional project command docs live in `.opencode/command/`.
+
+Examples:
+
+- `publish.md`
+- `get-unpublished-changes.md`
+- `omomomo.md`
+
+---
+
+## Hooks: Lifecycle Automation
+
+Hooks remain native OpenCode/OMO-compatible. `ohmymkt` extends behavior mainly via routing and tool wiring.
+
+### Hook Events
+
+| Event | When |
+|---|---|
+| `PreToolUse` | before a tool call |
+| `PostToolUse` | after a tool call |
+| `UserPromptSubmit` | when user submits prompt |
+| `Stop` | when session idles/stops |
+
+### Critical Hook Families
+
+| Family | Typical Hooks | Why It Matters |
+|---|---|---|
+| Context injection | directory AGENTS/README injectors, rules injector | keeps local context consistent |
+| Routing & modes | keyword-detector, think-mode, start-work | controls ultrawork/plan routing |
+| Safety & recovery | session-recovery, edit-error-recovery, validators | reduces broken-tool interruptions |
+| Output control | grep/tool output truncators | protects context window budget |
+| UX & notifications | background/session notifications | visibility for async tasks |
+
+### Marketing Ultrawork Extension
+
+`keyword-detector` ultrawork path includes a dedicated `marketing` source branch.
 
 ```mermaid
 flowchart LR
-    F[".claude/agents/*.md"] --> V{"is markdown and not AGENTS/README?"}
-    V -->|yes| FM["frontmatter parser"]
-    V -->|no| SKIP["skip"]
-    FM --> OUT["agent definitions in runtime"]
+    P["Prompt"] --> K{"Contains ulw/ultrawork?"}
+    K -->|no| N["normal route"]
+    K -->|yes| S["source-detector"]
+    S -->|marketing agents| M["marketing template"]
+    S -->|others| O["other templates"]
+    M --> G["growth-manager execution path"]
 ```
 
 ---
 
-## 6. Skill Integration
+## Tools: Agent Capabilities
 
-Project skills in `.opencode/skills/` can call `ohmymkt_*` tools directly.
+### LSP Tools
 
-Contract test ensures all `ohmymkt_*` tokens referenced by agents/skills exist in the registered toolset.
+| Tool | Description |
+|---|---|
+| `lsp_diagnostics` | diagnostics before build/test |
+| `lsp_prepare_rename` | validate rename safety |
+| `lsp_rename` | workspace rename |
+| `lsp_goto_definition` | navigate definitions |
+| `lsp_find_references` | usage search |
+| `lsp_symbols` | file/workspace symbol lookup |
 
-```mermaid
-flowchart LR
-    SK["skills + agents token scan"] --> CT["contract.test.ts"]
-    CT -->|all tokens registered| PASS["pass"]
-    CT -->|missing token| FAIL["fail build/test gate"]
-```
+### AST-Grep Tools
+
+| Tool | Description |
+|---|---|
+| `ast_grep_search` | AST-aware code search |
+| `ast_grep_replace` | AST-aware replacement |
+
+### Delegation & Session Tools
+
+| Tool | Description |
+|---|---|
+| `task` | category/agent delegation |
+| `call_omo_agent` | direct agent delegation with background support |
+| `background_output` | fetch async task result |
+| `background_cancel` | cancel async task |
+| `session_list` / `session_read` / `session_search` / `session_info` | session history and lookup |
+
+### Interactive Terminal Tool
+
+| Tool | Description |
+|---|---|
+| `interactive_bash` | tmux-based interactive terminal operations |
 
 ---
 
-## 7. Compatibility Principle
+## MCPs: Built-in and Skill-Embedded
 
-The fork keeps upstream OpenCode skeleton features (hooks, slash commands, task/background mechanisms).
+### Built-in MCPs (Upstream Compatible)
 
-Customizations are done through native extension points, not runtime bypasses.
+- `websearch` (Exa)
+- `context7`
+- `grep_app`
+
+### Skill-Embedded MCPs
+
+Skills can ship MCP definitions and schemas, including OAuth-enabled remote servers.
+
+### OAuth Capabilities
+
+- OAuth metadata discovery
+- PKCE flow
+- token refresh and persistence
+- CLI pre-auth support via `mcp oauth` commands
+
+---
+
+## Context Injection
+
+### Directory AGENTS.md
+
+Context loader can walk upward from target file to project root and inject layered AGENTS context.
+
+### Conditional Rules
+
+Rules in `.claude/rules/` can be injected by pattern or always-apply mode.
+
+---
+
+## Claude Code Compatibility
+
+`ohmymkt` keeps compatibility loading paths and toggles.
+
+### Compatibility Loaders
+
+| Type | Locations |
+|---|---|
+| Commands | `~/.claude/commands/`, `.claude/commands/` |
+| Skills | `~/.claude/skills/*/SKILL.md`, `.claude/skills/*/SKILL.md` |
+| Agents | `~/.claude/agents/*.md`, `.claude/agents/*.md` |
+| MCPs | `~/.claude/.mcp.json`, `.mcp.json`, `.claude/.mcp.json` |
+
+### Feature Toggles
+
+Use `claude_code` config toggles to disable compatibility sub-features selectively.
+
+---
+
+## Contract and Regression Guard
+
+The following tests guard core behavior:
+
+```bash
+bun test src/features/claude-code-agent-loader/loader.test.ts
+bun test src/tools/ohmymkt/tools.test.ts
+bun test src/tools/ohmymkt/contract.test.ts
+bun test src/hooks/keyword-detector/ultrawork/source-detector.test.ts
+```
+
+These ensure tool registration, token compatibility, agent loading rules, and marketing ultrawork routing remain stable.
